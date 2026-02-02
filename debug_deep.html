@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Deep Debugger</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .box {
+            padding: 15px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .highlight {
+            color: #d63384;
+            font-weight: bold;
+            font-family: monospace;
+            background: #fff3cd;
+            padding: 2px 5px;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🕵️ Deep Debugger</h1>
+
+    <div class="box">
+        <h3>1. Your Current Environment</h3>
+        <p><strong>Actual detected URL:</strong> <span id="url" class="highlight"></span></p>
+        <p><strong>Referrer:</strong> <span id="referrer" class="highlight"></span></p>
+        <p><em>(You MUST add exactly the highlighted URL above to Naver Console Web Service URL)</em></p>
+    </div>
+
+    <div class="box">
+        <h3>2. API Status</h3>
+        <div id="apiStatus">Loading...</div>
+    </div>
+
+    <script>
+        // Display Environment Info
+        document.getElementById('url').textContent = window.location.href;
+        document.getElementById('referrer').textContent = document.referrer || '(none)';
+
+        // Load Script Dynamically to catch errors
+        const script = document.createElement('script');
+        script.src = "https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=yds31td9sh";
+        script.onload = () => {
+            if (window.naver && window.naver.maps) {
+                document.getElementById('apiStatus').innerHTML = '<span class="success">✅ Script Loaded! Client ID is valid.</span>';
+            } else {
+                document.getElementById('apiStatus').innerHTML = '<span class="error">❌ Script load triggered but window.naver is missing.</span>';
+            }
+        };
+        script.onerror = () => {
+            document.getElementById('apiStatus').innerHTML = '<span class="error">❌ Failed to load script. Possible generic network block or incorrect Client ID.</span>';
+        };
+        document.body.appendChild(script);
+    </script>
+</body>
+
+</html>

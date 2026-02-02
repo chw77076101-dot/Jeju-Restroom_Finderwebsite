@@ -1,0 +1,57 @@
+[
+  {
+    "id": 1,
+    "name": "Jeju Int'l Airport Restroom",
+    "type": "Public",
+    "address": "2 Gonghang-ro, Jeju-si, Jeju-do",
+    "lat": 33.5104,
+    "lng": 126.4914,
+    "openTime": "24 Hours",
+    "unisex": true,
+    "diaperTable": true
+  },
+  {
+    "id": 2,
+    "name": "Yongduam Rock Restroom",
+    "type": "Tourist",
+    "address": "Yongduam-gil, Jeju-si, Jeju-do",
+    "lat": 33.5163,
+    "lng": 126.5123,
+    "openTime": "09:00 - 18:00",
+    "unisex": false,
+    "diaperTable": false
+  },
+  {
+    "id": 3,
+    "name": "Hamdeok Beach Restroom",
+    "type": "Public",
+    "address": "Hamdeok-ri, Jocheon-eup, Jeju-si",
+    "lat": 33.5430,
+    "lng": 126.6690,
+    "openTime": "24 Hours",
+    "unisex": true,
+    "diaperTable": true
+  },
+  {
+    "id": 4,
+    "name": "Seogwipo Olle Market Restroom",
+    "type": "Public",
+    "address": "Jungjeong-ro 73, Seogwipo-si",
+    "lat": 33.2499,
+    "lng": 126.5638,
+    "openTime": "07:00 - 21:00",
+    "unisex": false,
+    "diaperTable": false
+  },
+  {
+    "id": 5,
+    "name": "Seongsan Ilchulbong Restroom",
+    "type": "Tourist",
+    "address": "Seongsan-eup, Seogwipo-si",
+    "lat": 33.4580,
+    "lng": 126.9420,
+    "openTime": "09:00 - 18:00",
+    "unisex": true,
+    "diaperTable": true
+  }
+]

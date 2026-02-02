@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeju Restroom Finder</title>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+    <!-- Kakao Maps Script with User's Key -->
+    <script type="text/javascript"
+        src="//dapi.kakao.com/v2/maps/sdk.js?appkey=168a004f088bbd9ddde4d63fd5d0b054"></script>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        function App() {
+            const [toilets, setToilets] = useState([]);
+            const [userLocation, setUserLocation] = useState(null);
+            const [mapInstance, setMapInstance] = useState(null);
+            const mapRef = useRef(null);
+            const markersRef = useRef({});
+            const infoWindowsRef = useRef({});
+            const routeLineRef = useRef(null);
+            const userMarkerRef = useRef(null);
+
+            // 1. Fetch Data
+            useEffect(() => {
+                fetch('toilets.json')
+                    .then(res => res.json())
+                    .then(data => {
+                        console.log("Data loaded:", data);
+                        setToilets(data);
+                    })
+                    .catch(err => console.error("Failed to load data:", err));
+            }, []);
+
+            // 2. Initialize Map (Kakao)
+            useEffect(() => {
+                if (!mapRef.current) return;
+                if (mapInstance) return;
+
+                // Wait for Kakao SDK to load
+                if (!window.kakao || !window.kakao.maps) {
+                    alert("Kakao Maps API failed to load. Check your API Key and Domain settings.");
+                    return;
+                }
+
+                kakao.maps.load(() => {
+                    const container = mapRef.current;
+                    const options = {
+                        center: new kakao.maps.LatLng(33.4996, 126.5312), // Jeju City
+                        level: 9
+                    };
+
+                    const map = new kakao.maps.Map(container, options);
+                    setMapInstance(map);
+                });
+
+            }, [mapRef]);
+
+            // 3. Render Markers
+            useEffect(() => {
+                if (!mapInstance || toilets.length === 0) return;
+
+                toilets.forEach(toilet => {
+                    if (markersRef.current[toilet.id]) return;
+
+                    const position = new kakao.maps.LatLng(toilet.lat, toilet.lng);
+
+                    // Default marker
+                    const marker = new kakao.maps.Marker({
+                        position: position,
+                        map: mapInstance,
+                        title: toilet.name
+                    });
+
+                    // Custom Overlay for InfoWindow (Kakao style)
+                    // We use basic InfoWindow here for simplicity
+                    const contentString = `
+                        <div class="popup-content" style="padding:10px; min-width:200px; background:white; border-radius:5px; border:1px solid #ccc;">
+                            <h3 style="margin:0 0 5px;">${toilet.name}</h3>
+                            <p style="margin:5px 0; font-size:13px; color:#666;">${toilet.address}</p>
+                            <p style="margin:5px 0; font-size:13px;"><strong>Open:</strong> ${toilet.openTime}</p>
+                            <div style="margin-top:5px;">
+                                ${toilet.type === 'Public' ? '<span class="tag">Public</span>' : '<span class="tag">Tourist</span>'}
+                                ${toilet.unisex ? '<span class="tag">Unisex</span>' : ''}
+                                ${toilet.diaperTable ? '<span class="tag">Diaper Table</span>' : ''}
+                            </div>
+                        </div>
+                    `;
+
+                    const infoWindow = new kakao.maps.InfoWindow({
+                        content: contentString,
+                        removable: true
+                    });
+
+                    kakao.maps.event.addListener(marker, 'click', function () {
+                        // Close others
+                        Object.values(infoWindowsRef.current).forEach(iw => iw.close());
+                        infoWindow.open(mapInstance, marker);
+                    });
+
+                    markersRef.current[toilet.id] = marker;
+                    infoWindowsRef.current[toilet.id] = infoWindow;
+                });
+
+            }, [mapInstance, toilets]);
+
+            // 4. Handle GPS
+            const handleFindLocation = () => {
+                if (!navigator.geolocation) {
+                    alert("Geolocation is not supported by your browser.");
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        const userLatLng = new kakao.maps.LatLng(latitude, longitude);
+
+                        setUserLocation(userLatLng);
+
+                        if (mapInstance) {
+                            mapInstance.setCenter(userLatLng);
+                            mapInstance.setLevel(4); // Zoom in
+
+                            // User Marker
+                            if (userMarkerRef.current) {
+                                userMarkerRef.current.setPosition(userLatLng);
+                            } else {
+                                // Use a different image for user or default marker for now
+                                const imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png";
+                                const imageSize = new kakao.maps.Size(64, 69);
+                                const imageOption = { offset: new kakao.maps.Point(27, 69) };
+                                const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption);
+
+                                userMarkerRef.current = new kakao.maps.Marker({
+                                    position: userLatLng,
+                                    map: mapInstance,
+                                    image: markerImage,
+                                    zIndex: 1000
+                                });
+                            }
+
+                            findNearest(latitude, longitude);
+                        }
+                    },
+                    (error) => {
+                        console.error(error);
+                        alert("Unable to retrieve your location.");
+                    }
+                );
+            };
+
+            const findNearest = (lat, lng) => {
+                if (toilets.length === 0) return;
+
+                // Close all info windows
+                Object.values(infoWindowsRef.current).forEach(iw => iw.close());
+
+                // Remove existing line
+                if (routeLineRef.current) {
+                    routeLineRef.current.setMap(null);
+                    routeLineRef.current = null;
+                }
+
+                let nearest = null;
+                let minDist = Infinity;
+
+                // Kakao Maps doesn't have simple distanceTo for LatLng objects, doing Haversine manual or simplistic
+                // Since this is small scale, let's use a helper function or polyline length check if possible.
+                // Simple Euclidean is fine for "Nearest search" at this scale (Jeju) effectively.
+                // Actually, let's use the Polyline's getLength() capability which is accurate.
+
+                toilets.forEach(toilet => {
+                    const linePath = [
+                        new kakao.maps.LatLng(lat, lng),
+                        new kakao.maps.LatLng(toilet.lat, toilet.lng)
+                    ];
+
+                    // Create invisible polyline to measure connection
+                    const poly = new kakao.maps.Polyline({ pathogen: linePath });
+                    const dist = poly.getLength(); // in meters
+
+                    if (dist < minDist) {
+                        minDist = dist;
+                        nearest = toilet;
+                    }
+                });
+
+                if (nearest && markersRef.current[nearest.id]) {
+                    const nearestMarker = markersRef.current[nearest.id];
+                    const nearestInfoWindow = infoWindowsRef.current[nearest.id];
+                    const userLatLng = new kakao.maps.LatLng(lat, lng);
+                    const nearestLatLng = new kakao.maps.LatLng(nearest.lat, nearest.lng);
+
+                    // 1. Open Popup
+                    nearestInfoWindow.open(mapInstance, nearestMarker);
+
+                    // 2. Draw Polyline
+                    const polyline = new kakao.maps.Polyline({
+                        map: mapInstance,
+                        path: [userLatLng, nearestLatLng],
+                        strokeWeight: 5,
+                        strokeColor: '#FF0000',
+                        strokeOpacity: 0.7,
+                        strokeStyle: 'dashed'
+                    });
+                    routeLineRef.current = polyline;
+
+                    // 3. Fit Bounds
+                    const bounds = new kakao.maps.LatLngBounds();
+                    bounds.extend(userLatLng);
+                    bounds.extend(nearestLatLng);
+
+                    mapInstance.setBounds(bounds);
+                }
+            };
+
+            return (
+                <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                    <header>
+                        <h1>Jeju Restroom Finder (Kakao Map) 🚽</h1>
+                    </header>
+                    <div className="map-container">
+                        <div id="map" ref={mapRef}></div>
+                        <button className="find-btn" onClick={handleFindLocation}>
+                            <span>📍</span> Find Nearest Toilet
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>

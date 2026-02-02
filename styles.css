@@ -1,0 +1,114 @@
+:root {
+  --primary-color: #007bff;
+  --secondary-color: #6c757d;
+  --bg-color: #f8f9fa;
+  --text-color: #333;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Full viewport height */
+}
+
+/* Header */
+header {
+  background: white;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #333;
+}
+
+/* Map Container */
+.map-container {
+  flex: 1; /* Takes remaining space */
+  width: 100%;
+  position: relative;
+}
+
+/* Leaflet map needs explicitly defined height if flex doesn't work perfectly in all browsers, 
+   but with flex:1 on parent it should work if html,body,#root are 100%. 
+   We set it explicitly just in case for the container div. */
+#map {
+  height: 100%;
+  width: 100%;
+}
+
+/* Floating Action Button */
+.find-btn {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000; /* Above map */
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: transform 0.2s, background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.find-btn:hover {
+  background-color: #0056b3;
+  transform: translateX(-50%) scale(1.05);
+}
+
+.find-btn:active {
+  transform: translateX(-50%) scale(0.95);
+}
+
+/* Popup Styles */
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+}
+
+.popup-content h3 {
+  margin: 0 0 5px 0;
+  font-size: 1.1rem;
+}
+
+.popup-content p {
+  margin: 5px 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.tag {
+  display: inline-block;
+  background: #e9ecef;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  margin-right: 4px;
+  margin-top: 5px;
+}
+
+/* Loading/Error States */
+.status-message {
+  padding: 2rem;
+  text-align: center;
+}
