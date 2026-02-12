@@ -1,0 +1,16 @@
+{
+    "name": "제주도 전지역 화장실 찾기",
+    "short_name": "제주화장실",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#ff7f00",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "pwa_icon_512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

@@ -20,6 +20,11 @@
 
     <!-- Data -->
     <script src="jeju_olle_data.js"></script>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="pwa_icon_512.png">
+    <meta name="theme-color" content="#ff7f00">
 </head>
 
 <body>
@@ -625,6 +630,20 @@
                 window.open(webUrl, '_blank');
             }
         };
+    </script>
+    <script>
+        // Service Worker Registration for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
     </script>
 </body>
 
