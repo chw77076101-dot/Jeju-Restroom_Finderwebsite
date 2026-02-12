@@ -281,6 +281,13 @@
                                 <h3 style={{ margin: 0 }}>🚽 Nearest Restrooms</h3>
                                 <button onClick={() => setIsListVisible(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>×</button>
                             </div>
+                            {/* Debug Info */}
+                            {userLocation && (
+                                <div style={{ fontSize: '0.8rem', color: '#666', marginBottom: '10px', textAlign: 'center', backgroundColor: '#f0f0f0', padding: '5px', borderRadius: '4px' }}>
+                                    📍 인식된 위치: {userLocation.getLat().toFixed(4)}, {userLocation.getLng().toFixed(4)}
+                                </div>
+                            )}
+
                             {nearestList.map((toilet) => (
                                 <div key={toilet.id} className="restroom-item" onClick={() => handleToiletClick(toilet)}>
                                     <div className="restroom-header">
