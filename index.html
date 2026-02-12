@@ -20,7 +20,6 @@
 
     <!-- Data -->
     <script src="jeju_olle_data.js"></script>
-
 </head>
 
 <body>
@@ -37,12 +36,14 @@
             const [isListVisible, setIsListVisible] = useState(false);
             const [showMarkers, setShowMarkers] = useState(false); // Default false
             const [isEmergency, setIsEmergency] = useState(false);
+            const [selectedCourse, setSelectedCourse] = useState(null);
 
             const mapRef = useRef(null);
             const markersRef = useRef({});
             const infoWindowsRef = useRef({});
             const routeLineRef = useRef(null);
             const userMarkerRef = useRef(null);
+            const ollePolylineRef = useRef(null);
 
             // Haversine Formula
             const getDistance = (lat1, lon1, lat2, lon2) => {
@@ -96,37 +97,67 @@
                 });
             }, [mapRef]);
 
+            // Helper to get review stats from LocalStorage
+            const getReviewStats = (toiletId) => {
+                const storage = JSON.parse(localStorage.getItem('jeju_reviews') || '{}');
+                return storage[toiletId] || { good: 0, bad: 0, userAction: null };
+            };
+
             // 3. Render Markers
             useEffect(() => {
                 if (!mapInstance || toilets.length === 0) return;
 
-                // Clear existing markers if they should be hidden
-                if (!showMarkers) {
-                    Object.values(markersRef.current).forEach(m => m.setMap(null));
-                    markersRef.current = {};
-                    return;
+                // Determine which toilets to show
+                let targetToilets = [];
+
+                if (selectedCourse) {
+                    // Olle Mode: Filter near path
+                    if (window.OLLE_COURSES && window.OLLE_COURSES[selectedCourse]) {
+                        const coursePath = window.OLLE_COURSES[selectedCourse].path;
+                        // Simple check: within 2km of any path point
+                        targetToilets = toilets.filter(t => {
+                            return coursePath.some(pt => getDistance(t.lat, t.lng, pt.lat, pt.lng) < 2.0);
+                        });
+                    }
+                } else if (showMarkers) {
+                    // Normal/Emergency Mode: Show all (or we could limit, but let's show all for now if enabled)
+                    targetToilets = toilets;
+                } else {
+                    // Hidden
+                    targetToilets = [];
                 }
 
-                toilets.forEach(toilet => {
+                // Remove markers not in target
+                Object.keys(markersRef.current).forEach(id => {
+                    if (!targetToilets.find(t => t.id == id)) {
+                        markersRef.current[id].setMap(null);
+                        delete markersRef.current[id];
+                    }
+                });
+
+                // Add/Update markers
+                targetToilets.forEach(toilet => {
                     if (markersRef.current[toilet.id]) return;
 
                     const position = new kakao.maps.LatLng(toilet.lat, toilet.lng);
-
-                    // Default marker
                     const marker = new kakao.maps.Marker({
                         position: position,
                         map: mapInstance,
                         title: toilet.name
                     });
 
-                    // Reviews UI
+                    // Initial Review Data
+                    const stats = getReviewStats(toilet.id);
+
                     const contentString = `
                         <div class="popup-content" style="padding:10px; min-width:200px; background:white; border-radius:10px; border:1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
                             <h3 style="margin:0 0 5px; color:#ff7f00;">${toilet.name}</h3>
                             <p style="margin:5px 0; font-size:13px; color:#666;">${toilet.address}</p>
-                            <div style="margin-top:8px; border-top:1px solid #eee; padding-top:8px; display:flex; gap:5px;">
-                                <button onclick="window.submitReview(${toilet.id}, 'good')" style="border:1px solid #ddd; background:white; border-radius:12px; padding:4px 8px; cursor:pointer; font-size:12px;">👍 좋아요</button>
-                                <button onclick="window.submitReview(${toilet.id}, 'bad')" style="border:1px solid #ddd; background:white; border-radius:12px; padding:4px 8px; cursor:pointer; font-size:12px;">👎 별로</button>
+                            <div style="margin-top:8px; border-top:1px solid #eee; padding-top:8px;" id="review-box-${toilet.id}">
+                                <div style="display:flex; gap:5px; align-items:center;">
+                                    <button onclick="window.handleReview(${toilet.id}, 'good')" style="border:1px solid #ddd; background:${stats.userAction === 'good' ? '#e7f5ff' : 'white'}; color:${stats.userAction === 'good' ? '#007bff' : 'black'}; border-radius:12px; padding:4px 8px; cursor:pointer; font-size:12px;">👍 ${stats.good}</button>
+                                    <button onclick="window.handleReview(${toilet.id}, 'bad')" style="border:1px solid #ddd; background:${stats.userAction === 'bad' ? '#ffe3e3' : 'white'}; color:${stats.userAction === 'bad' ? '#dc3545' : 'black'}; border-radius:12px; padding:4px 8px; cursor:pointer; font-size:12px;">👎 ${stats.bad}</button>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -138,13 +169,23 @@
 
                     kakao.maps.event.addListener(marker, 'click', function () {
                         Object.values(infoWindowsRef.current).forEach(iw => iw.close());
+                        // Refresh review stats on open (UI hack)
+                        const currentStats = getReviewStats(toilet.id);
+                        const updatedContent = contentString
+                            .replace(`👍 ${stats.good}`, `👍 ${currentStats.good}`)
+                            .replace(`👎 ${stats.bad}`, `👎 ${currentStats.bad}`)
+                            .replace(`background:${stats.userAction === 'good' ? '#e7f5ff' : 'white'}`, `background:${currentStats.userAction === 'good' ? '#e7f5ff' : 'white'}`) // Update simple styles if possible
+                            .replace(`color:${stats.userAction === 'good' ? '#007bff' : 'black'}`, `color:${currentStats.userAction === 'good' ? '#007bff' : 'black'}`);
+
+                        infoWindow.setContent(updatedContent);
                         infoWindow.open(mapInstance, marker);
                     });
 
                     markersRef.current[toilet.id] = marker;
                     infoWindowsRef.current[toilet.id] = infoWindow;
                 });
-            }, [mapInstance, toilets, showMarkers]);
+            }, [mapInstance, toilets, showMarkers, selectedCourse]);
+
 
             // Find Nearest Logic
             const findNearest = (lat, lng, limit) => {
@@ -190,12 +231,14 @@
                     bounds.extend(new kakao.maps.LatLng(lat, lng));
                     bounds.extend(new kakao.maps.LatLng(nearest.lat, nearest.lng));
 
-                    // In emergency (limit=1), we might want tighter zoom, but bounds usually works well
                     mapInstance.setBounds(bounds);
                 }
             };
 
             const handleFindLocation = (mode = 'normal') => {
+                setSelectedCourse(null);
+                if (ollePolylineRef.current) { ollePolylineRef.current.setMap(null); ollePolylineRef.current = null; }
+
                 if (!navigator.geolocation) {
                     alert("Geolocation is not supported.");
                     return;
@@ -228,15 +271,7 @@
 
                             if (mode === 'emergency') {
                                 setIsEmergency(true);
-                                setShowMarkers(true); // Must show them to find nearest
-                                // Slightly defer to ensure state update or marker render?
-                                // React effects run after render, so direct call is fine if markers exist.
-                                // But if showMarkers was false, we need to wait for effect to render markers first?
-                                // Actually, 'findNearest' uses markersRef.current.
-                                // If we just set showMarkers(true), the effect to create markers runs *after* this render cycle.
-                                // So we need a timeout or useEffect dependency.
-                                // Simple fix: use setTimeout(..., 100) or check in useEffect.
-                                // Let's use setTimeout for safety in this simple app.
+                                setShowMarkers(true);
                                 setTimeout(() => findNearest(latitude, longitude, 1), 200);
                             } else {
                                 setIsEmergency(false);
@@ -250,6 +285,47 @@
                         alert("Unable to retrieve location.");
                     }
                 );
+            };
+
+            const handleOlleSelect = (courseId) => {
+                if (!window.OLLE_COURSES) return;
+
+                if (courseId === "") {
+                    setSelectedCourse(null);
+                    if (ollePolylineRef.current) { ollePolylineRef.current.setMap(null); ollePolylineRef.current = null; }
+                    setShowMarkers(false); // Hide if deselected
+                    return;
+                }
+
+                const course = window.OLLE_COURSES[courseId];
+                setSelectedCourse(courseId);
+                setShowMarkers(false); // Let the effect handle visibility for course only
+                setIsListVisible(false);
+                setIsEmergency(false);
+
+                // Clear route lines
+                if (ollePolylineRef.current) { ollePolylineRef.current.setMap(null); }
+                if (routeLineRef.current) { routeLineRef.current.setMap(null); }
+                Object.values(infoWindowsRef.current).forEach(iw => iw.close());
+
+                // Draw new route
+                if (mapInstance && course) {
+                    const path = course.path.map(p => new kakao.maps.LatLng(p.lat, p.lng));
+                    const polyline = new kakao.maps.Polyline({
+                        map: mapInstance,
+                        path: path,
+                        strokeWeight: 8,
+                        strokeColor: course.color,
+                        strokeOpacity: 0.8,
+                        strokeStyle: 'solid'
+                    });
+                    ollePolylineRef.current = polyline;
+
+                    // Fit bounds
+                    const bounds = new kakao.maps.LatLngBounds();
+                    path.forEach(p => bounds.extend(p));
+                    mapInstance.setBounds(bounds);
+                }
             };
 
             const handleToiletClick = (toilet) => {
@@ -266,7 +342,18 @@
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                     <header>
-                        <h1>Jeju Restroom Finder 🚽</h1>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                            <h1 style={{ fontSize: '1.2rem', margin: 0 }}>Jeju Restroom 🚽</h1>
+                            <select
+                                onChange={(e) => handleOlleSelect(e.target.value)}
+                                style={{ padding: '5px', borderRadius: '15px', border: '1px solid #ff7f00', outline: 'none', fontSize: '0.9rem' }}
+                            >
+                                <option value="">🚶 올레길 선택</option>
+                                <option value="1">1코스 (시흥-광치기)</option>
+                                <option value="6">6코스 (쇠소깍-올레센터)</option>
+                                <option value="7">7코스 (올레센터-월평)</option>
+                            </select>
+                        </div>
                     </header>
                     <div className="map-container">
                         <div id="map" ref={mapRef}></div>
@@ -274,7 +361,7 @@
                         {/* Nearest List Overlay */}
                         <div className={`restroom-list-container ${isListVisible ? 'active' : ''}`}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                                <h3 style={{ margin: 0 }}>🚽 Nearest Restrooms</h3>
+                                <h3 style={{ margin: 0 }}>🚽 가까운 화장실</h3>
                                 <button onClick={() => setIsListVisible(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>×</button>
                             </div>
 
@@ -304,7 +391,7 @@
                         </div>
 
                         <button className="find-btn" onClick={() => handleFindLocation('normal')}>
-                            <span>📍</span> 내 주변 화장실
+                            <span>📍</span> 내 주변
                         </button>
 
                         <button
@@ -343,11 +430,27 @@
         root.render(<App />);
     </script>
     <script>
-        // Global review stub
-        window.submitReview = (id, type) => {
-            alert(`Review submitted for ID ${id}: ${type}!\n(This is a demo feature)`);
-            const span = document.getElementById(`score-${id}`);
-            if (span) span.innerText = "(1)";
+        // Global Review Handler
+        window.handleReview = (id, action) => {
+            const storage = JSON.parse(localStorage.getItem('jeju_reviews') || '{}');
+            const current = storage[id] || { good: 0, bad: 0, userAction: null };
+
+            // Logic: Toggle if same, Switch if different
+            if (current.userAction === action) {
+                // Cancel
+                current[action]--;
+                current.userAction = null;
+            } else {
+                // Switch
+                if (current.userAction) current[current.userAction]--; // Decrease old
+                current[action]++; // Increase new
+                current.userAction = action;
+            }
+
+            storage[id] = current;
+            localStorage.setItem('jeju_reviews', JSON.stringify(storage));
+
+            alert(`리뷰가 반영되었습니다: ${action === 'good' ? '좋아요' : '별로예요'}`);
         };
     </script>
 </body>
