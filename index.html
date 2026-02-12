@@ -124,7 +124,9 @@
                 // Determine which toilets to show
                 let targetToilets = [];
 
-                if (showAll) {
+                if (isEmergency && nearestList.length > 0) {
+                    targetToilets = nearestList;
+                } else if (showAll) {
                     targetToilets = toilets;
                 } else if (selectedCourse) {
                     if (window.OLLE_COURSES && window.OLLE_COURSES[selectedCourse]) {
@@ -210,7 +212,7 @@
                     markersRef.current[toilet.id] = marker;
                     infoWindowsRef.current[toilet.id] = infoWindow;
                 });
-            }, [mapInstance, toilets, showMarkers, selectedCourse, searchCenter, searchRadius, showAll]);
+            }, [mapInstance, toilets, showMarkers, selectedCourse, searchCenter, searchRadius, showAll, isEmergency, nearestList]);
 
             // ... (Find Nearest Logic same) ...
             const findNearest = (lat, lng, limit) => {
@@ -264,9 +266,6 @@
                 // Reset other modes
                 setShowAll(false);
                 setSelectedCourse(null);
-                setSearchCenter(null); setSearchRadius(0);
-                if (radiusCircleRef.current) { radiusCircleRef.current.setMap(null); radiusCircleRef.current = null; }
-                if (searchMarkerRef.current) { searchMarkerRef.current.setMap(null); searchMarkerRef.current = null; }
                 if (ollePolylineRef.current) { ollePolylineRef.current.setMap(null); ollePolylineRef.current = null; }
 
                 if (!navigator.geolocation) {
@@ -301,12 +300,22 @@
 
                             if (mode === 'emergency') {
                                 setIsEmergency(true);
-                                setShowMarkers(true);
-                                setTimeout(() => findNearest(latitude, longitude, 1), 200);
+                                setSearchCenter(null); // Disable radius search
+                                setSearchRadius(0);
+                                if (radiusCircleRef.current) radiusCircleRef.current.setMap(null);
+                                setShowMarkers(false); // Let nearestList handle it
+                                setTimeout(() => findNearest(latitude, longitude, 3), 200); // Top 3
                             } else {
+                                // Normal Mode -> Radius Mode
                                 setIsEmergency(false);
-                                setShowMarkers(true);
-                                setTimeout(() => findNearest(latitude, longitude, 5), 200);
+                                setNearestList([]);
+                                setIsListVisible(false);
+                                if (routeLineRef.current) routeLineRef.current.setMap(null);
+
+                                setSearchCenter(userLatLng);
+                                setSearchRadius(1); // Default 1km
+                                updateRadiusCircle(userLatLng, 1);
+                                setShowMarkers(false); // Let radius logic handle it
                             }
                         }
                     },
@@ -512,10 +521,10 @@
                                 📍 내 주변 화장실 찾기
                             </button>
 
-                            {/* Radius Buttons (Visible only when searching) */}
+                            {/* Radius Buttons (Visible only when searching or My Location) */}
                             {searchCenter && (
                                 <div style={{ display: 'flex', gap: '5px', justifyContent: 'center' }}>
-                                    {[1, 3, 5].map(km => (
+                                    {[1, 3, 5, 10].map(km => (
                                         <button
                                             key={km}
                                             onClick={() => updateRadiusCircle(searchCenter, km)}
