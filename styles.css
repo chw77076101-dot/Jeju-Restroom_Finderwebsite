@@ -15,14 +15,15 @@ body {
 #root {
   display: flex;
   flex-direction: column;
-  height: 100vh; /* Full viewport height */
+  height: 100vh;
+  /* Full viewport height */
 }
 
 /* Header */
 header {
   background: white;
   padding: 1rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   display: flex;
   justify-content: space-between;
@@ -37,7 +38,8 @@ h1 {
 
 /* Map Container */
 .map-container {
-  flex: 1; /* Takes remaining space */
+  flex: 1;
+  /* Takes remaining space */
   width: 100%;
   position: relative;
 }
@@ -56,7 +58,8 @@ h1 {
   bottom: 2rem;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 1000; /* Above map */
+  z-index: 1000;
+  /* Above map */
   background-color: var(--primary-color);
   color: white;
   border: none;
@@ -64,7 +67,7 @@ h1 {
   border-radius: 50px;
   font-size: 1rem;
   font-weight: bold;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   transition: transform 0.2s, background-color 0.2s;
   display: flex;
@@ -107,8 +110,76 @@ h1 {
   margin-top: 5px;
 }
 
-/* Loading/Error States */
-.status-message {
-  padding: 2rem;
-  text-align: center;
+/* Restroom List Styles */
+.restroom-list-container {
+  position: absolute;
+  bottom: 80px;
+  /* Above the button */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 400px;
+  max-height: 40vh;
+  overflow-y: auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 999;
+  padding: 10px;
+  display: none;
+  /* Hidden by default until active */
+}
+
+.restroom-list-container.active {
+  display: block;
+}
+
+.restroom-item {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.restroom-item:last-child {
+  border-bottom: none;
+}
+
+.restroom-item:hover {
+  background-color: #f8f9fa;
+}
+
+.restroom-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.restroom-name {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #333;
+}
+
+.restroom-dist {
+  background-color: #e7f5ff;
+  color: #007bff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.restroom-address {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.restroom-meta {
+  display: flex;
+  gap: 5px;
+  margin-top: 6px;
 }

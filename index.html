@@ -29,11 +29,32 @@
             const [toilets, setToilets] = useState([]);
             const [userLocation, setUserLocation] = useState(null);
             const [mapInstance, setMapInstance] = useState(null);
+            const [nearestList, setNearestList] = useState([]); // List of nearest toilets
+            const [isListVisible, setIsListVisible] = useState(false);
+
             const mapRef = useRef(null);
             const markersRef = useRef({});
             const infoWindowsRef = useRef({});
             const routeLineRef = useRef(null);
             const userMarkerRef = useRef(null);
+
+            // Haversine Formula for distance (km)
+            const getDistance = (lat1, lon1, lat2, lon2) => {
+                const R = 6371; // Radius of the earth in km
+                const dLat = deg2rad(lat2 - lat1);
+                const dLon = deg2rad(lon2 - lon1);
+                const a =
+                    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                const d = R * c; // Distance in km
+                return d;
+            };
+
+            const deg2rad = (deg) => {
+                return deg * (Math.PI / 180);
+            };
 
             // 1. Fetch Data
             useEffect(() => {
@@ -176,29 +197,21 @@
                     routeLineRef.current = null;
                 }
 
-                let nearest = null;
-                let minDist = Infinity;
-
-                // Kakao Maps doesn't have simple distanceTo for LatLng objects, doing Haversine manual or simplistic
-                // Since this is small scale, let's use a helper function or polyline length check if possible.
-                // Simple Euclidean is fine for "Nearest search" at this scale (Jeju) effectively.
-                // Actually, let's use the Polyline's getLength() capability which is accurate.
-
-                toilets.forEach(toilet => {
-                    const linePath = [
-                        new kakao.maps.LatLng(lat, lng),
-                        new kakao.maps.LatLng(toilet.lat, toilet.lng)
-                    ];
-
-                    // Create invisible polyline to measure connection
-                    const poly = new kakao.maps.Polyline({ pathogen: linePath });
-                    const dist = poly.getLength(); // in meters
-
-                    if (dist < minDist) {
-                        minDist = dist;
-                        nearest = toilet;
-                    }
+                // Calculate distance for ALL toilets
+                const toiletsWithDist = toilets.map(t => {
+                    const distKm = getDistance(lat, lng, t.lat, t.lng);
+                    return { ...t, dist: distKm };
                 });
+
+                // Sort by distance
+                toiletsWithDist.sort((a, b) => a.dist - b.dist);
+
+                // Take top 5
+                const top5 = toiletsWithDist.slice(0, 5);
+                setNearestList(top5);
+                setIsListVisible(true);
+
+                const nearest = top5[0];
 
                 if (nearest && markersRef.current[nearest.id]) {
                     const nearestMarker = markersRef.current[nearest.id];
@@ -220,13 +233,29 @@
                     });
                     routeLineRef.current = polyline;
 
-                    // 3. Fit Bounds
+                    // 3. Fit Bounds to include user and nearest
                     const bounds = new kakao.maps.LatLngBounds();
                     bounds.extend(userLatLng);
                     bounds.extend(nearestLatLng);
 
+                    // Also extend to include a bit more context if very close
                     mapInstance.setBounds(bounds);
                 }
+            };
+
+            const handleToiletClick = (toilet) => {
+                if (!mapInstance || !markersRef.current[toilet.id]) return;
+
+                const marker = markersRef.current[toilet.id];
+                const infoWindow = infoWindowsRef.current[toilet.id];
+
+                // Close others
+                Object.values(infoWindowsRef.current).forEach(iw => iw.close());
+
+                // Open this one
+                infoWindow.open(mapInstance, marker);
+                mapInstance.setCenter(marker.getPosition());
+                mapInstance.setLevel(3);
             };
 
             return (
@@ -236,6 +265,32 @@
                     </header>
                     <div className="map-container">
                         <div id="map" ref={mapRef}></div>
+
+                        {/* Nearest List Overlay */}
+                        <div className={`restroom-list-container ${isListVisible ? 'active' : ''}`}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                <h3 style={{ margin: 0 }}>🚽 Nearest Restrooms</h3>
+                                <button onClick={() => setIsListVisible(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>×</button>
+                            </div>
+                            {nearestList.map((toilet) => (
+                                <div key={toilet.id} className="restroom-item" onClick={() => handleToiletClick(toilet)}>
+                                    <div className="restroom-header">
+                                        <span className="restroom-name">{toilet.name}</span>
+                                        <span className="restroom-dist">
+                                            {toilet.dist < 1
+                                                ? `${(toilet.dist * 1000).toFixed(0)}m`
+                                                : `${toilet.dist.toFixed(1)}km`}
+                                        </span>
+                                    </div>
+                                    <p className="restroom-address">{toilet.address || "주소 정보 없음"}</p>
+                                    <div className="restroom-meta">
+                                        {toilet.type === 'Public' ? <span className="tag">Public</span> : <span className="tag">Tourist</span>}
+                                        {toilet.diaperTable && <span className="tag">기저귀교환대</span>}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
                         <button className="find-btn" onClick={handleFindLocation}>
                             <span>📍</span> Find Nearest Toilet
                         </button>
