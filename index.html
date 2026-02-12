@@ -197,22 +197,49 @@
                     // Add Listener
                     kakao.maps.event.addListener(marker, 'click', function () {
                         Object.values(infoWindowsRef.current).forEach(iw => iw.close());
-                        // Refresh review stats on open (UI hack)
+
+                        // 1. Draw Red Line (Dynamic)
+                        if (userLocation) {
+                            if (routeLineRef.current) {
+                                routeLineRef.current.setMap(null);
+                            }
+                            const line = new kakao.maps.Polyline({
+                                map: mapInstance,
+                                path: [userLocation, new kakao.maps.LatLng(toilet.lat, toilet.lng)],
+                                strokeWeight: 6,
+                                strokeColor: '#FF0000',
+                                strokeOpacity: 0.8,
+                                strokeStyle: 'solid'
+                            });
+                            routeLineRef.current = line;
+                        }
+
+                        // 2. Refresh review stats & Add Distance
                         const currentStats = getReviewStats(toilet.id);
+                        let distanceHtml = '';
+
+                        if (userLocation) {
+                            const distKm = getDistance(userLocation.getLat(), userLocation.getLng(), toilet.lat, toilet.lng);
+                            const distStr = distKm < 1 ? `${(distKm * 1000).toFixed(0)}m` : `${distKm.toFixed(1)}km`;
+                            distanceHtml = `<span style="color:#ff7f00; font-size:0.8rem; margin-left:5px;">(📏 ${distStr})</span>`;
+                        }
+
                         const updatedContent = contentString
                             .replace(`👍 ${stats.good}`, `👍 ${currentStats.good}`)
                             .replace(`👎 ${stats.bad}`, `👎 ${currentStats.bad}`)
                             .replace(`background:${stats.userAction === 'good' ? '#e7f5ff' : 'white'}`, `background:${currentStats.userAction === 'good' ? '#e7f5ff' : 'white'}`)
-                            .replace(`color:${stats.userAction === 'good' ? '#007bff' : 'black'}`, `color:${currentStats.userAction === 'good' ? '#007bff' : 'black'}`);
+                            .replace(`color:${stats.userAction === 'good' ? '#007bff' : 'black'}`, `color:${currentStats.userAction === 'good' ? '#007bff' : 'black'}`)
+                            .replace(`</h3>`, `${distanceHtml}</h3>`); // Inject distance next to title
 
                         infoWindow.setContent(updatedContent);
                         infoWindow.open(mapInstance, marker);
+                        mapInstance.panTo(marker.getPosition());
                     });
 
                     markersRef.current[toilet.id] = marker;
                     infoWindowsRef.current[toilet.id] = infoWindow;
                 });
-            }, [mapInstance, toilets, showMarkers, selectedCourse, searchCenter, searchRadius, showAll, isEmergency, nearestList]);
+            }, [mapInstance, toilets, showMarkers, selectedCourse, searchCenter, searchRadius, showAll, isEmergency, nearestList, userLocation]);
 
             // ... (Find Nearest Logic same) ...
             const findNearest = (lat, lng, limit) => {
