@@ -331,7 +331,7 @@
                                 setSearchRadius(0);
                                 if (radiusCircleRef.current) radiusCircleRef.current.setMap(null);
                                 setShowMarkers(false); // Let nearestList handle it
-                                setTimeout(() => findNearest(latitude, longitude, 3), 200); // Top 3
+                                setTimeout(() => findNearest(latitude, longitude, 5), 200); // Changed to 5
                             } else {
                                 // Normal Mode -> Radius Mode
                                 setIsEmergency(false);
@@ -348,288 +348,36 @@
                     },
                     (error) => {
                         console.error(error);
-                        alert("Unable to retrieve location.");
+                        alert("위치 정보를 가져올 수 없습니다. GPS 설정이나 브라우저 권한을 확인해주세요.");
                     }
                 );
             };
 
             // ... (handleOlleSelect same) ...
-            const handleOlleSelect = (courseId) => {
-                // Reset others
-                setShowAll(false);
-                setSearchCenter(null); setSearchRadius(0);
-                if (radiusCircleRef.current) { radiusCircleRef.current.setMap(null); radiusCircleRef.current = null; }
-                if (searchMarkerRef.current) { searchMarkerRef.current.setMap(null); searchMarkerRef.current = null; }
+            // ...
 
-                if (!window.OLLE_COURSES) return;
-
-                if (courseId === "") {
-                    setSelectedCourse(null);
-                    if (ollePolylineRef.current) { ollePolylineRef.current.setMap(null); ollePolylineRef.current = null; }
-                    setShowMarkers(false); // Hide if deselected
-                    return;
-                }
-
-                const course = window.OLLE_COURSES[courseId];
-                setSelectedCourse(courseId);
-                setShowMarkers(false); // Let the effect handle visibility for course only
-                setIsListVisible(false);
-                setIsEmergency(false);
-
-                // Clear route lines
-                if (ollePolylineRef.current) { ollePolylineRef.current.setMap(null); }
-                if (routeLineRef.current) { routeLineRef.current.setMap(null); }
-                Object.values(infoWindowsRef.current).forEach(iw => iw.close());
-
-                // Draw new route
-                if (mapInstance && course) {
-                    const path = course.path.map(p => new kakao.maps.LatLng(p.lat, p.lng));
-                    const polyline = new kakao.maps.Polyline({
-                        map: mapInstance,
-                        path: path,
-                        strokeWeight: 8,
-                        strokeColor: course.color,
-                        strokeOpacity: 0.8,
-                        strokeStyle: 'solid'
-                    });
-                    ollePolylineRef.current = polyline;
-
-                    // Fit bounds
-                    const bounds = new kakao.maps.LatLngBounds();
-                    path.forEach(p => bounds.extend(p));
-                    mapInstance.setBounds(bounds);
-                }
-            };
-
-            // ... (handleToiletClick) ...
-            const handleToiletClick = (toilet) => {
-                if (!mapInstance || !markersRef.current[toilet.id]) return;
-                const marker = markersRef.current[toilet.id];
-                const infoWindow = infoWindowsRef.current[toilet.id];
-
-                Object.values(infoWindowsRef.current).forEach(iw => iw.close());
-                infoWindow.open(mapInstance, marker);
-                mapInstance.setCenter(marker.getPosition());
-                mapInstance.setLevel(3);
-
-                // Dynamic Route Line: Draw line from User Location to this toilet
-                if (userLocation) {
-                    if (routeLineRef.current) {
-                        routeLineRef.current.setMap(null);
-                    }
-
-                    const line = new kakao.maps.Polyline({
-                        map: mapInstance,
-                        path: [userLocation, new kakao.maps.LatLng(toilet.lat, toilet.lng)],
-                        strokeWeight: 6,
-                        strokeColor: '#FF0000',
-                        strokeOpacity: 0.8,
-                        strokeStyle: 'solid'
-                    });
-                    routeLineRef.current = line;
-                }
-            };
-
-            // ... (handleSearchAddress same) ...
-            const handleSearchAddress = () => {
-                if (!searchAddress || !mapInstance) return;
-
-                // Reset other modes
-                setShowAll(false);
-                setSelectedCourse(null);
-                setIsEmergency(false);
-                setShowMarkers(false); // Controlled by radius
-                if (ollePolylineRef.current) { ollePolylineRef.current.setMap(null); ollePolylineRef.current = null; }
-
-                const geocoder = new kakao.maps.services.Geocoder();
-                geocoder.addressSearch(searchAddress, function (result, status) {
-                    if (status === kakao.maps.services.Status.OK) {
-                        const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
-
-                        setSearchCenter(coords);
-                        setSearchRadius(1); // Default to 1km
-
-                        mapInstance.setCenter(coords);
-
-                        // Search Marker
-                        if (searchMarkerRef.current) searchMarkerRef.current.setMap(null);
-                        const imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
-                        const imageSize = new kakao.maps.Size(24, 35);
-                        const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
-                        searchMarkerRef.current = new kakao.maps.Marker({
-                            map: mapInstance,
-                            position: coords,
-                            image: markerImage,
-                            title: searchAddress
-                        });
-
-                        updateRadiusCircle(coords, 1);
-                    } else {
-                        alert('주소를 찾을 수 없습니다.');
-                    }
-                });
-            };
-
-            // ... (updateRadiusCircle same) ...
-            const updateRadiusCircle = (center, km) => {
-                if (!mapInstance || !center) return;
-                setSearchRadius(km);
-
-                if (radiusCircleRef.current) radiusCircleRef.current.setMap(null);
-
-                const circle = new kakao.maps.Circle({
-                    center: center,
-                    radius: km * 1000,
-                    strokeWeight: 2,
-                    strokeColor: '#75B8FA',
-                    strokeOpacity: 0.8,
-                    strokeStyle: 'dashed',
-                    fillColor: '#CFE7FF',
-                    fillOpacity: 0.3
-                });
-                circle.setMap(mapInstance);
-                radiusCircleRef.current = circle;
-
-                // Fit bounds
-                const bounds = new kakao.maps.LatLngBounds();
-                const delta = (km * 0.012);
-                bounds.extend(new kakao.maps.LatLng(center.getLat() - delta, center.getLng() - delta));
-                bounds.extend(new kakao.maps.LatLng(center.getLat() + delta, center.getLng() + delta));
-                mapInstance.setBounds(bounds);
-            };
-
-            return (
-                <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                    <header>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <h1 style={{ fontSize: '1.2rem', margin: 0 }}>제주도 전지역 화장실 🚽 <span style={{ fontSize: '0.8rem', color: '#888' }}>v1.2</span></h1>
-                                <select onChange={(e) => handleOlleSelect(e.target.value)} style={{ padding: '5px', borderRadius: '15px', border: '1px solid #ff7f00', outline: 'none', fontSize: '0.9rem' }} value={selectedCourse || ""}>
-                                    <option value="">🚶 올레길 선택 (전체 코스)</option>
-                                    {window.OLLE_COURSES && Object.keys(window.OLLE_COURSES).sort((a, b) => {
-                                        const numA = parseFloat(a);
-                                        const numB = parseFloat(b);
-                                        if (numA !== numB) return numA - numB;
-                                        return a.localeCompare(b);
-                                    }).map(id => (
-                                        <option key={id} value={id}>
-                                            {window.OLLE_COURSES[id].name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* Show All Toggle */}
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', cursor: 'pointer', padding: '0 5px' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={showAll}
-                                    onChange={(e) => {
-                                        setShowAll(e.target.checked);
-                                        if (e.target.checked) {
-                                            setSelectedCourse(null);
-                                            setSearchCenter(null);
-                                            // Reset other visuals
-                                            if (ollePolylineRef.current) ollePolylineRef.current.setMap(null);
-                                            if (radiusCircleRef.current) radiusCircleRef.current.setMap(null);
-                                            if (searchMarkerRef.current) searchMarkerRef.current.setMap(null);
-                                        }
-                                    }}
-                                    style={{ width: '18px', height: '18px' }}
-                                />
-                                🗺️ 제주 전지역 화장실 보기
-                            </label>
-
-                            {/* Address Search Bar */}
-                            <div style={{ display: 'flex', gap: '5px', width: '100%' }}>
-                                <input
-                                    type="text"
-                                    placeholder="주소 검색 (예: 성산읍)"
-                                    value={searchAddress}
-                                    onChange={(e) => setSearchAddress(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && handleSearchAddress()}
-                                    style={{ flex: 1, padding: '8px', borderRadius: '15px', border: '1px solid #ddd', fontSize: '0.9rem' }}
-                                />
-                                <button onClick={handleSearchAddress} style={{ padding: '8px 12px', background: '#ff7f00', color: 'white', border: 'none', borderRadius: '15px', cursor: 'pointer' }}>🔍</button>
-                            </div>
-
-                            {/* My Location Button (Moved) */}
-                            <button
-                                onClick={() => handleFindLocation('normal')}
-                                style={{
-                                    width: '100%', padding: '10px', background: '#4CAF50', color: 'white',
-                                    border: 'none', borderRadius: '15px', fontWeight: 'bold', cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px'
-                                }}
-                            >
-                                📍 내 주변 화장실 찾기
-                            </button>
-
-                            {/* Radius Buttons (Visible only when searching or My Location) */}
-                            {searchCenter && (
-                                <div style={{ display: 'flex', gap: '5px', justifyContent: 'center' }}>
-                                    {[1, 3, 5, 10].map(km => (
-                                        <button
-                                            key={km}
-                                            onClick={() => updateRadiusCircle(searchCenter, km)}
-                                            style={{
-                                                padding: '4px 10px',
-                                                borderRadius: '12px',
-                                                border: '1px solid #ff7f00',
-                                                background: searchRadius === km ? '#ff7f00' : 'white',
-                                                color: searchRadius === km ? 'white' : '#ff7f00',
-                                                cursor: 'pointer',
-                                                fontSize: '0.8rem'
-                                            }}
-                                        >
-                                            {km}km
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-
-                        </div>
-                    </header>
-                    <div className="map-container">
-                        <div id="map" ref={mapRef}></div>
-
-                        {/* Nearest List Overlay */}
-                        <div className={`restroom-list-container ${isListVisible ? 'active' : ''}`}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                                <h3 style={{ margin: 0 }}>🚽 가까운 화장실</h3>
-                                <button onClick={() => setIsListVisible(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>×</button>
-                            </div>
-                            {nearestList.map((toilet) => (
-                                <div key={toilet.id} className="restroom-item" onClick={() => handleToiletClick(toilet)}>
-                                    <div className="restroom-header">
-                                        <span className="restroom-name">{toilet.name}</span>
-                                        <span className="restroom-dist">
-                                            {toilet.dist < 1 ? `${(toilet.dist * 1000).toFixed(0)}m` : `${toilet.dist.toFixed(1)}km`}
-                                        </span>
-                                    </div>
-                                    <p className="restroom-address">{toilet.address || "주소 정보 없음"}</p>
-                                    <div className="restroom-meta">
-                                        {toilet.type === 'Public' ? <span className="tag">Public</span> : <span className="tag">Tourist</span>}
-                                        {toilet.diaperTable && <span className="tag">기저귀교환대</span>}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        <button onClick={() => handleFindLocation('emergency')}
-                            style={{
-                                position: 'absolute', bottom: '150px', right: '20px', width: '80px', height: '80px',
-                                borderRadius: '50%', border: 'none', background: '#dc3545', color: 'white',
-                                fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
-                                zIndex: 1000, cursor: 'pointer', display: 'flex', flexDirection: 'column',
-                                alignItems: 'center', justifyContent: 'center', animation: 'pulse 2s infinite'
-                            }}
-                        >
-                            <span style={{ fontSize: '1.5rem', marginBottom: '2px' }}>🚨</span>
-                            <span style={{ fontSize: '0.8rem' }}>급해요</span>
-                        </button>
-                    </div>
-                </div>
+            // ... (inside return) ...
+            <button
+                onClick={() => handleFindLocation('emergency')}
+                onTouchEnd={(e) => {
+                    e.preventDefault(); // Prevent ghost click
+                    handleFindLocation('emergency');
+                }}
+                style={{
+                    position: 'absolute', bottom: '150px', right: '20px', width: '80px', height: '80px',
+                    borderRadius: '50%', border: 'none', background: '#dc3545', color: 'white',
+                    fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+                    zIndex: 9999, cursor: 'pointer', display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center', animation: 'pulse 2s infinite',
+                    userSelect: 'none', WebkitUserSelect: 'none'
+                }}
+            >
+                <span style={{ fontSize: '1.5rem', marginBottom: '2px' }}>🚨</span>
+                <span style={{ fontSize: '0.8rem' }}>급해요</span>
+            </button>
+                                <h1 style={{ fontSize: '1.2rem', margin: 0 }}>제주도 전지역 화장실 🚽 <span style={{ fontSize: '0.8rem', color: '#888' }}>v1.3</span></h1>
+                    </div >
+                </div >
             );
         }
 
