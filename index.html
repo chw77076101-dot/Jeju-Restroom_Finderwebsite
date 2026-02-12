@@ -159,7 +159,7 @@
 
                     const stats = getReviewStats(toilet.id);
                     const kakaoNaviUrl = `https://map.kakao.com/link/to/${toilet.name},${toilet.lat},${toilet.lng}`;
-                    const naverMapUrl = `https://m.map.naver.com/route.nhn?menu=route&elng=${toilet.lng}&elat=${toilet.lat}&etext=${encodeURIComponent(toilet.name)}`;
+                    // Naver Map handled via onClick
                     const googleMapUrl = `https://www.google.com/maps/dir/?api=1&destination=${toilet.lat},${toilet.lng}`;
 
                     const contentString = `
@@ -169,7 +169,7 @@
                             
                             <div style="display:flex; gap:5px; margin: 8px 0;">
                                 <a href="${kakaoNaviUrl}" target="_blank" style="flex:1; text-align:center; background:#FAE100; color:#3C1E1E; padding:5px; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">Kakao</a>
-                                <a href="${naverMapUrl}" target="_blank" style="flex:1; text-align:center; background:#03C75A; color:white; padding:5px; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">Naver</a>
+                                <a href="#" onclick="window.openNaverMap(${toilet.lat}, ${toilet.lng}, '${toilet.name}'); return false;" style="flex:1; text-align:center; background:#03C75A; color:white; padding:5px; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">Naver</a>
                                 <a href="${googleMapUrl}" target="_blank" style="flex:1; text-align:center; background:#4285F4; color:white; padding:5px; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">Google</a>
                             </div>
 
@@ -600,6 +600,30 @@
             localStorage.setItem('jeju_reviews', JSON.stringify(storage));
 
             alert(`리뷰가 반영되었습니다: ${action === 'good' ? '좋아요' : '별로예요'}`);
+        };
+
+        // Naver Map Deep Link Handler
+        window.openNaverMap = (lat, lng, name) => {
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            const urlName = encodeURIComponent(name);
+            const appUrl = `nmap://route/public?dlat=${lat}&dlng=${lng}&dname=${urlName}&appname=JejuRestroom`;
+            const webUrl = `https://m.map.naver.com/route.nhn?menu=route&elng=${lng}&elat=${lat}&etext=${urlName}`;
+
+            if (isMobile) {
+                // Try App
+                const start = new Date().getTime();
+                window.location.href = appUrl;
+
+                // Fallback to Web if App doesn't open
+                setTimeout(() => {
+                    if (new Date().getTime() - start < 2000) {
+                        window.open(webUrl, '_blank');
+                    }
+                }, 1500);
+            } else {
+                // Desktop -> Web
+                window.open(webUrl, '_blank');
+            }
         };
     </script>
 </body>
