@@ -374,7 +374,7 @@
                 }
             };
 
-            // ... (handleToiletClick same) ...
+            // ... (handleToiletClick) ...
             const handleToiletClick = (toilet) => {
                 if (!mapInstance || !markersRef.current[toilet.id]) return;
                 const marker = markersRef.current[toilet.id];
@@ -384,6 +384,23 @@
                 infoWindow.open(mapInstance, marker);
                 mapInstance.setCenter(marker.getPosition());
                 mapInstance.setLevel(3);
+
+                // Dynamic Route Line: Draw line from User Location to this toilet
+                if (userLocation) {
+                    if (routeLineRef.current) {
+                        routeLineRef.current.setMap(null);
+                    }
+
+                    const line = new kakao.maps.Polyline({
+                        map: mapInstance,
+                        path: [userLocation, new kakao.maps.LatLng(toilet.lat, toilet.lng)],
+                        strokeWeight: 6,
+                        strokeColor: '#FF0000',
+                        strokeOpacity: 0.8,
+                        strokeStyle: 'solid'
+                    });
+                    routeLineRef.current = line;
+                }
             };
 
             // ... (handleSearchAddress same) ...
