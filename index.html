@@ -36,219 +36,30 @@
             const [isListVisible, setIsListVisible] = useState(false);
             const [showMarkers, setShowMarkers] = useState(false); // Default false
             const [isEmergency, setIsEmergency] = useState(false);
-            const [selectedCourse, setSelectedCourse] = useState(null);
+            const [showAll, setShowAll] = useState(false); // Global Toggle
 
             // Address Search State
             const [searchAddress, setSearchAddress] = useState("");
             const [searchRadius, setSearchRadius] = useState(0); // 0 = off, 1, 3, 5 km
             const [searchCenter, setSearchCenter] = useState(null); // LatLng of searched address
 
-            const mapRef = useRef(null);
-            const markersRef = useRef({});
-            const infoWindowsRef = useRef({});
-            const routeLineRef = useRef(null);
-            const userMarkerRef = useRef(null);
-            const ollePolylineRef = useRef(null);
-            const radiusCircleRef = useRef(null);
-            const searchMarkerRef = useRef(null);
+            // ... (Refs) ...
 
-            // Haversine Formula
-            const getDistance = (lat1, lon1, lat2, lon2) => {
-                const R = 6371;
-                const dLat = deg2rad(lat2 - lat1);
-                const dLon = deg2rad(lon2 - lon1);
-                const a =
-                    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-                return R * c;
-            };
+            // ... (Haversine) ...
 
-            const deg2rad = (deg) => {
-                return deg * (Math.PI / 180);
-            };
+            // ... (Data Fetch) ...
 
-            // 1. Fetch Data
-            useEffect(() => {
-                fetch('toilets.json')
-                    .then(res => res.json())
-                    .then(data => {
-                        // Filter for Jeju only (approx Lat 32-34, Lng 126-127) and valid coords
-                        const jejuToilets = data.filter(t =>
-                            t.lat > 32 && t.lat < 35 &&
-                            t.lng > 125 && t.lng < 128 &&
-                            t.lat !== 0 && t.lng !== 0
-                        );
-                        setToilets(jejuToilets);
-                    })
-                    .catch(err => console.error("Failed to load data:", err));
-            }, []);
+            // ... (Map Init) ...
 
-            // 2. Initialize Map
-            useEffect(() => {
-                if (!mapRef.current) return;
-                if (mapInstance) return;
+            // ... (Review Stats) ...
 
-                if (!window.kakao || !window.kakao.maps) {
-                    return;
-                }
-                kakao.maps.load(() => {
-                    const container = mapRef.current;
-                    const options = {
-                        center: new kakao.maps.LatLng(33.4996, 126.5312), // Jeju City
-                        level: 9
-                    };
-                    const map = new kakao.maps.Map(container, options);
-                    setMapInstance(map);
-                });
-            }, [mapRef]);
+            // ... (Render Markers Effect - Will update in next step) ...
 
-            // Helper to get review stats from LocalStorage
-            const getReviewStats = (toiletId) => {
-                const storage = JSON.parse(localStorage.getItem('jeju_reviews') || '{}');
-                return storage[toiletId] || { good: 0, bad: 0, userAction: null };
-            };
-
-            // 3. Render Markers
-            useEffect(() => {
-                if (!mapInstance || toilets.length === 0) return;
-
-                // Determine which toilets to show
-                let targetToilets = [];
-
-                if (selectedCourse) {
-                    // Olle Mode: Filter near path
-                    if (window.OLLE_COURSES && window.OLLE_COURSES[selectedCourse]) {
-                        const coursePath = window.OLLE_COURSES[selectedCourse].path;
-                        // Simple check: within 2km of any path point
-                        targetToilets = toilets.filter(t => {
-                            return coursePath.some(pt => getDistance(t.lat, t.lng, pt.lat, pt.lng) < 2.0);
-                        });
-                    }
-                } else if (searchCenter && searchRadius > 0) {
-                    // Address Search Mode
-                    const centerLat = searchCenter.getLat();
-                    const centerLng = searchCenter.getLng();
-                    targetToilets = toilets.filter(t => getDistance(centerLat, centerLng, t.lat, t.lng) <= searchRadius);
-                } else if (showMarkers) {
-                    // Normal/Emergency Mode: Show all (or we could limit, but let's show all for now if enabled)
-                    targetToilets = toilets;
-                } else {
-                    // Hidden
-                    targetToilets = [];
-                }
-
-                // Remove markers not in target
-                Object.keys(markersRef.current).forEach(id => {
-                    if (!targetToilets.find(t => t.id == id)) {
-                        markersRef.current[id].setMap(null);
-                        delete markersRef.current[id];
-                    }
-                });
-
-                // Add/Update markers
-                targetToilets.forEach(toilet => {
-                    if (markersRef.current[toilet.id]) return;
-
-                    const position = new kakao.maps.LatLng(toilet.lat, toilet.lng);
-                    const marker = new kakao.maps.Marker({
-                        position: position,
-                        map: mapInstance,
-                        title: toilet.name
-                    });
-
-                    // Initial Review Data
-                    const stats = getReviewStats(toilet.id);
-
-                    const contentString = `
-                        <div class="popup-content" style="padding:10px; min-width:200px; background:white; border-radius:10px; border:1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-                            <h3 style="margin:0 0 5px; color:#ff7f00;">${toilet.name}</h3>
-                            <p style="margin:5px 0; font-size:13px; color:#666;">${toilet.address}</p>
-                            <div style="margin-top:8px; border-top:1px solid #eee; padding-top:8px;" id="review-box-${toilet.id}">
-                                <div style="display:flex; gap:5px; align-items:center;">
-                                    <button onclick="window.handleReview(${toilet.id}, 'good')" style="border:1px solid #ddd; background:${stats.userAction === 'good' ? '#e7f5ff' : 'white'}; color:${stats.userAction === 'good' ? '#007bff' : 'black'}; border-radius:12px; padding:4px 8px; cursor:pointer; font-size:12px;">👍 ${stats.good}</button>
-                                    <button onclick="window.handleReview(${toilet.id}, 'bad')" style="border:1px solid #ddd; background:${stats.userAction === 'bad' ? '#ffe3e3' : 'white'}; color:${stats.userAction === 'bad' ? '#dc3545' : 'black'}; border-radius:12px; padding:4px 8px; cursor:pointer; font-size:12px;">👎 ${stats.bad}</button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-
-                    const infoWindow = new kakao.maps.InfoWindow({
-                        content: contentString,
-                        removable: true
-                    });
-
-                    kakao.maps.event.addListener(marker, 'click', function () {
-                        Object.values(infoWindowsRef.current).forEach(iw => iw.close());
-                        // Refresh review stats on open (UI hack)
-                        const currentStats = getReviewStats(toilet.id);
-                        const updatedContent = contentString
-                            .replace(`👍 ${stats.good}`, `👍 ${currentStats.good}`)
-                            .replace(`👎 ${stats.bad}`, `👎 ${currentStats.bad}`)
-                            .replace(`background:${stats.userAction === 'good' ? '#e7f5ff' : 'white'}`, `background:${currentStats.userAction === 'good' ? '#e7f5ff' : 'white'}`) // Update simple styles if possible
-                            .replace(`color:${stats.userAction === 'good' ? '#007bff' : 'black'}`, `color:${currentStats.userAction === 'good' ? '#007bff' : 'black'}`);
-
-                        infoWindow.setContent(updatedContent);
-                        infoWindow.open(mapInstance, marker);
-                    });
-
-                    markersRef.current[toilet.id] = marker;
-                    infoWindowsRef.current[toilet.id] = infoWindow;
-                });
-            }, [mapInstance, toilets, showMarkers, selectedCourse, searchCenter, searchRadius]);
-
-
-            // Find Nearest Logic
-            const findNearest = (lat, lng, limit) => {
-                if (toilets.length === 0) return;
-
-                Object.values(infoWindowsRef.current).forEach(iw => iw.close());
-
-                if (routeLineRef.current) {
-                    routeLineRef.current.setMap(null);
-                    routeLineRef.current = null;
-                }
-
-                const toiletsWithDist = toilets.map(t => {
-                    const distKm = getDistance(lat, lng, t.lat, t.lng);
-                    return { ...t, dist: distKm };
-                });
-
-                toiletsWithDist.sort((a, b) => a.dist - b.dist);
-
-                const top = toiletsWithDist.slice(0, limit);
-                setNearestList(top);
-                setIsListVisible(true);
-
-                const nearest = top[0];
-                if (nearest && markersRef.current[nearest.id]) {
-                    const marker = markersRef.current[nearest.id];
-                    const infoWindow = infoWindowsRef.current[nearest.id];
-
-                    // Open popup for the nearest one
-                    infoWindow.open(mapInstance, marker);
-
-                    const line = new kakao.maps.Polyline({
-                        map: mapInstance,
-                        path: [new kakao.maps.LatLng(lat, lng), new kakao.maps.LatLng(nearest.lat, nearest.lng)],
-                        strokeWeight: 6,
-                        strokeColor: '#FF0000',
-                        strokeOpacity: 0.8,
-                        strokeStyle: 'solid'
-                    });
-                    routeLineRef.current = line;
-
-                    const bounds = new kakao.maps.LatLngBounds();
-                    bounds.extend(new kakao.maps.LatLng(lat, lng));
-                    bounds.extend(new kakao.maps.LatLng(nearest.lat, nearest.lng));
-
-                    mapInstance.setBounds(bounds);
-                }
-            };
+            // ... (Find Nearest) ...
 
             const handleFindLocation = (mode = 'normal') => {
                 // Reset other modes
+                setShowAll(false);
                 setSelectedCourse(null);
                 setSearchCenter(null); setSearchRadius(0);
                 if (radiusCircleRef.current) { radiusCircleRef.current.setMap(null); radiusCircleRef.current = null; }
@@ -259,6 +70,8 @@
                     alert("Geolocation is not supported.");
                     return;
                 }
+
+                // ... (Geolocation logic remains same) ...
 
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
@@ -305,6 +118,7 @@
 
             const handleOlleSelect = (courseId) => {
                 // Reset others
+                setShowAll(false);
                 setSearchCenter(null); setSearchRadius(0);
                 if (radiusCircleRef.current) { radiusCircleRef.current.setMap(null); radiusCircleRef.current = null; }
                 if (searchMarkerRef.current) { searchMarkerRef.current.setMap(null); searchMarkerRef.current = null; }
@@ -318,6 +132,7 @@
                     return;
                 }
 
+                // ... (Rest of Olle logic) ...
                 const course = window.OLLE_COURSES[courseId];
                 setSelectedCourse(courseId);
                 setShowMarkers(false); // Let the effect handle visibility for course only
@@ -365,6 +180,7 @@
                 if (!searchAddress || !mapInstance) return;
 
                 // Reset other modes
+                setShowAll(false);
                 setSelectedCourse(null);
                 setIsEmergency(false);
                 setShowMarkers(false); // Controlled by radius
@@ -372,6 +188,7 @@
 
                 const geocoder = new kakao.maps.services.Geocoder();
                 geocoder.addressSearch(searchAddress, function (result, status) {
+                    // ... (Search Callback) ...
                     if (status === kakao.maps.services.Status.OK) {
                         const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
 
@@ -432,7 +249,7 @@
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <h1 style={{ fontSize: '1.2rem', margin: 0 }}>Jeju Restroom 🚽</h1>
-                                <select onChange={(e) => handleOlleSelect(e.target.value)} style={{ padding: '5px', borderRadius: '15px', border: '1px solid #ff7f00', outline: 'none', fontSize: '0.9rem' }}>
+                                <select onChange={(e) => handleOlleSelect(e.target.value)} style={{ padding: '5px', borderRadius: '15px', border: '1px solid #ff7f00', outline: 'none', fontSize: '0.9rem' }} value={selectedCourse || ""}>
                                     <option value="">🚶 올레길 선택 (전체 코스)</option>
                                     {window.OLLE_COURSES && Object.keys(window.OLLE_COURSES).sort((a, b) => {
                                         const numA = parseFloat(a);
@@ -446,6 +263,27 @@
                                     ))}
                                 </select>
                             </div>
+
+                            {/* Show All Toggle */}
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', cursor: 'pointer', padding: '0 5px' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={showAll}
+                                    onChange={(e) => {
+                                        setShowAll(e.target.checked);
+                                        if (e.target.checked) {
+                                            setSelectedCourse(null);
+                                            setSearchCenter(null);
+                                            // Reset other visuals
+                                            if (ollePolylineRef.current) ollePolylineRef.current.setMap(null);
+                                            if (radiusCircleRef.current) radiusCircleRef.current.setMap(null);
+                                            if (searchMarkerRef.current) searchMarkerRef.current.setMap(null);
+                                        }
+                                    }}
+                                    style={{ width: '18px', height: '18px' }}
+                                />
+                                🗺️ 제주 전지역 화장실 보기
+                            </label>
 
                             {/* Address Search Bar */}
                             <div style={{ display: 'flex', gap: '5px', width: '100%' }}>
