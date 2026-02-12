@@ -476,7 +476,7 @@
                     <header>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <h1 style={{ fontSize: '1.2rem', margin: 0 }}>제주도 전지역 화장실 🚽</h1>
+                                <h1 style={{ fontSize: '1.2rem', margin: 0 }}>제주도 전지역 화장실 🚽 <span style={{ fontSize: '0.8rem', color: '#888' }}>v1.2</span></h1>
                                 <select onChange={(e) => handleOlleSelect(e.target.value)} style={{ padding: '5px', borderRadius: '15px', border: '1px solid #ff7f00', outline: 'none', fontSize: '0.9rem' }} value={selectedCourse || ""}>
                                     <option value="">🚶 올레길 선택 (전체 코스)</option>
                                     {window.OLLE_COURSES && Object.keys(window.OLLE_COURSES).sort((a, b) => {
