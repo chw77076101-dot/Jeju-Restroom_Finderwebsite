@@ -32,11 +32,134 @@
             const [nearestList, setNearestList] = useState([]); // List of nearest toilets
             const [isListVisible, setIsListVisible] = useState(false);
 
+            const [showMarkers, setShowMarkers] = useState(false); // Default false as requested
+            const [isEmergency, setIsEmergency] = useState(false);
+
             const mapRef = useRef(null);
             const markersRef = useRef({});
             const infoWindowsRef = useRef({});
             const routeLineRef = useRef(null);
             const userMarkerRef = useRef(null);
+
+            // ... (Haversine function remains)
+
+            // ... (Fetch Data remains)
+
+            // ... (Map Init remains)
+
+            // 3. Render Markers (Updated to respect showMarkers)
+            useEffect(() => {
+                if (!mapInstance || toilets.length === 0) return;
+
+                // Clear existing markers if they should be hidden
+                if (!showMarkers) {
+                    Object.values(markersRef.current).forEach(m => m.setMap(null));
+                    markersRef.current = {};
+                    return;
+                }
+
+                toilets.forEach(toilet => {
+                    if (markersRef.current[toilet.id]) return;
+
+                    const position = new kakao.maps.LatLng(toilet.lat, toilet.lng);
+
+                    // Default marker (Will update to custom later)
+                    const marker = new kakao.maps.Marker({
+                        position: position,
+                        map: mapInstance,
+                        title: toilet.name
+                    });
+
+                    // Custom Overlay Content with Reviews (Placeholder)
+                    const contentString = `
+                        <div class="popup-content" style="padding:10px; min-width:200px; background:white; border-radius:10px; border:1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                            <h3 style="margin:0 0 5px; color:#ff7f00;">${toilet.name}</h3>
+                            <p style="margin:5px 0; font-size:13px; color:#666;">${toilet.address}</p>
+                            <div style="margin-top:8px; border-top:1px solid #eee; padding-top:8px;">
+                                <button onclick="window.submitReview(${toilet.id}, 'good')" style="border:1px solid #ddd; background:white; border-radius:15px; padding:2px 8px; cursor:pointer;">👍 좋아요</button>
+                                <button onclick="window.submitReview(${toilet.id}, 'bad')" style="border:1px solid #ddd; background:white; border-radius:15px; padding:2px 8px; cursor:pointer;">👎 별로예요</button>
+                                <span id="score-${toilet.id}" style="font-size:12px; margin-left:5px; color:#888;">(0)</span>
+                            </div>
+                        </div>
+                    `;
+
+                    const infoWindow = new kakao.maps.InfoWindow({
+                        content: contentString,
+                        removable: true
+                    });
+
+                    kakao.maps.event.addListener(marker, 'click', function () {
+                        Object.values(infoWindowsRef.current).forEach(iw => iw.close());
+                        infoWindow.open(mapInstance, marker);
+                    });
+
+                    markersRef.current[toilet.id] = marker;
+                    infoWindowsRef.current[toilet.id] = infoWindow;
+                });
+
+            }, [mapInstance, toilets, showMarkers]);
+
+            // Handle GPS & Find
+            const handleFindLocation = (mode = 'normal') => {
+                if (!navigator.geolocation) {
+                    alert("Geolocation is not supported.");
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        const userLatLng = new kakao.maps.LatLng(latitude, longitude);
+
+                        setUserLocation(userLatLng);
+
+                        if (mapInstance) {
+                            mapInstance.setCenter(userLatLng);
+                            mapInstance.setLevel(mode === 'emergency' ? 3 : 4);
+
+                            // User Marker logic...
+                            if (userMarkerRef.current) {
+                                userMarkerRef.current.setPosition(userLatLng);
+                            } else {
+                                const imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png";
+                                const imageSize = new kakao.maps.Size(64, 69);
+                                const imageOption = { offset: new kakao.maps.Point(27, 69) };
+                                const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption);
+                                userMarkerRef.current = new kakao.maps.Marker({
+                                    position: userLatLng,
+                                    map: mapInstance,
+                                    image: markerImage,
+                                    zIndex: 1000
+                                });
+                            }
+
+                            if (mode === 'emergency') {
+                                // In emergency, find ONLY the closest one
+                                findNearest(latitude, longitude, 1);
+                            } else {
+                                // Normal: Show all markers and list
+                                setShowMarkers(true);
+                                findNearest(latitude, longitude, 5);
+                            }
+                        }
+                    },
+                    (error) => {
+                        console.error(error);
+                        alert("Unable to retrieve location.");
+                    }
+                );
+            };
+
+            const findNearest = (lat, lng, limit) => {
+                // ... (existing logic modified for limit and emergency)
+                // Need to update findNearest separately or here? 
+                // Let's modify the function signature in the next step or assume it handles it.
+                // For this edit, I'll leave the call but implementation needs to match.
+                // Actually I should update the existing findNearest implementation in the next block.
+                // Re-using the logic from previous step but adapting here.
+
+                // (Implementation continues in next tool call for findNearest update)
+            };
 
             // Haversine Formula for distance (km)
             const getDistance = (lat1, lon1, lat2, lon2) => {
@@ -307,8 +430,37 @@
                             ))}
                         </div>
 
-                        <button className="find-btn" onClick={handleFindLocation}>
-                            <span>📍</span> Find Nearest Toilet
+
+                        <button className="find-btn" onClick={() => handleFindLocation('normal')}>
+                            <span>📍</span> 내 주변 화장실
+                        </button>
+
+                        <button
+                            onClick={() => handleFindLocation('emergency')}
+                            style={{
+                                position: 'absolute',
+                                bottom: '150px',
+                                right: '20px',
+                                width: '80px',
+                                height: '80px',
+                                borderRadius: '50%',
+                                border: 'none',
+                                background: 'red',
+                                color: 'white',
+                                fontWeight: 'bold',
+                                fontSize: '1.2rem',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+                                zIndex: 1000,
+                                cursor: 'pointer',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                animation: 'pulse 2s infinite'
+                            }}
+                        >
+                            <span>🚨</span>
+                            <span style={{ fontSize: '0.8rem' }}>급해요</span>
                         </button>
                     </div>
                 </div>
