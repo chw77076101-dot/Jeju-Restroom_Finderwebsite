@@ -1,5 +1,6 @@
 :root {
-  --primary-color: #007bff;
+  /* Jeju Orange */
+  --primary-color: #ff7f00;
   --secondary-color: #6c757d;
   --bg-color: #f8f9fa;
   --text-color: #333;
@@ -182,4 +183,22 @@ h1 {
   display: flex;
   gap: 5px;
   margin-top: 6px;
+}
+
+/* Pulse Animation for SOS Button */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+  }
+
+  70% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 15px rgba(255, 0, 0, 0);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+  }
 }
