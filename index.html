@@ -29,10 +29,9 @@
             const [toilets, setToilets] = useState([]);
             const [userLocation, setUserLocation] = useState(null);
             const [mapInstance, setMapInstance] = useState(null);
-            const [nearestList, setNearestList] = useState([]); // List of nearest toilets
+            const [nearestList, setNearestList] = useState([]);
             const [isListVisible, setIsListVisible] = useState(false);
-
-            const [showMarkers, setShowMarkers] = useState(false); // Default false as requested
+            const [showMarkers, setShowMarkers] = useState(false); // Default false
             const [isEmergency, setIsEmergency] = useState(false);
 
             const mapRef = useRef(null);
@@ -41,13 +40,59 @@
             const routeLineRef = useRef(null);
             const userMarkerRef = useRef(null);
 
-            // ... (Haversine function remains)
+            // Haversine Formula
+            const getDistance = (lat1, lon1, lat2, lon2) => {
+                const R = 6371;
+                const dLat = deg2rad(lat2 - lat1);
+                const dLon = deg2rad(lon2 - lon1);
+                const a =
+                    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                return R * c;
+            };
 
-            // ... (Fetch Data remains)
+            const deg2rad = (deg) => {
+                return deg * (Math.PI / 180);
+            };
 
-            // ... (Map Init remains)
+            // 1. Fetch Data
+            useEffect(() => {
+                fetch('toilets.json')
+                    .then(res => res.json())
+                    .then(data => {
+                        // Filter for Jeju only (approx Lat 32-34, Lng 126-127) and valid coords
+                        const jejuToilets = data.filter(t =>
+                            t.lat > 32 && t.lat < 35 &&
+                            t.lng > 125 && t.lng < 128 &&
+                            t.lat !== 0 && t.lng !== 0
+                        );
+                        setToilets(jejuToilets);
+                    })
+                    .catch(err => console.error("Failed to load data:", err));
+            }, []);
 
-            // 3. Render Markers (Updated to respect showMarkers)
+            // 2. Initialize Map
+            useEffect(() => {
+                if (!mapRef.current) return;
+                if (mapInstance) return;
+
+                if (!window.kakao || !window.kakao.maps) {
+                    return;
+                }
+                kakao.maps.load(() => {
+                    const container = mapRef.current;
+                    const options = {
+                        center: new kakao.maps.LatLng(33.4996, 126.5312), // Jeju City
+                        level: 9
+                    };
+                    const map = new kakao.maps.Map(container, options);
+                    setMapInstance(map);
+                });
+            }, [mapRef]);
+
+            // 3. Render Markers
             useEffect(() => {
                 if (!mapInstance || toilets.length === 0) return;
 
@@ -63,22 +108,21 @@
 
                     const position = new kakao.maps.LatLng(toilet.lat, toilet.lng);
 
-                    // Default marker (Will update to custom later)
+                    // Default marker
                     const marker = new kakao.maps.Marker({
                         position: position,
                         map: mapInstance,
                         title: toilet.name
                     });
 
-                    // Custom Overlay Content with Reviews (Placeholder)
+                    // Reviews UI
                     const contentString = `
                         <div class="popup-content" style="padding:10px; min-width:200px; background:white; border-radius:10px; border:1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
                             <h3 style="margin:0 0 5px; color:#ff7f00;">${toilet.name}</h3>
                             <p style="margin:5px 0; font-size:13px; color:#666;">${toilet.address}</p>
-                            <div style="margin-top:8px; border-top:1px solid #eee; padding-top:8px;">
-                                <button onclick="window.submitReview(${toilet.id}, 'good')" style="border:1px solid #ddd; background:white; border-radius:15px; padding:2px 8px; cursor:pointer;">👍 좋아요</button>
-                                <button onclick="window.submitReview(${toilet.id}, 'bad')" style="border:1px solid #ddd; background:white; border-radius:15px; padding:2px 8px; cursor:pointer;">👎 별로예요</button>
-                                <span id="score-${toilet.id}" style="font-size:12px; margin-left:5px; color:#888;">(0)</span>
+                            <div style="margin-top:8px; border-top:1px solid #eee; padding-top:8px; display:flex; gap:5px;">
+                                <button onclick="window.submitReview(${toilet.id}, 'good')" style="border:1px solid #ddd; background:white; border-radius:12px; padding:4px 8px; cursor:pointer; font-size:12px;">👍 좋아요</button>
+                                <button onclick="window.submitReview(${toilet.id}, 'bad')" style="border:1px solid #ddd; background:white; border-radius:12px; padding:4px 8px; cursor:pointer; font-size:12px;">👎 별로</button>
                             </div>
                         </div>
                     `;
@@ -96,10 +140,57 @@
                     markersRef.current[toilet.id] = marker;
                     infoWindowsRef.current[toilet.id] = infoWindow;
                 });
-
             }, [mapInstance, toilets, showMarkers]);
 
-            // Handle GPS & Find
+            // Find Nearest Logic
+            const findNearest = (lat, lng, limit) => {
+                if (toilets.length === 0) return;
+
+                Object.values(infoWindowsRef.current).forEach(iw => iw.close());
+
+                if (routeLineRef.current) {
+                    routeLineRef.current.setMap(null);
+                    routeLineRef.current = null;
+                }
+
+                const toiletsWithDist = toilets.map(t => {
+                    const distKm = getDistance(lat, lng, t.lat, t.lng);
+                    return { ...t, dist: distKm };
+                });
+
+                toiletsWithDist.sort((a, b) => a.dist - b.dist);
+
+                const top = toiletsWithDist.slice(0, limit);
+                setNearestList(top);
+                setIsListVisible(true);
+
+                const nearest = top[0];
+                if (nearest && markersRef.current[nearest.id]) {
+                    const marker = markersRef.current[nearest.id];
+                    const infoWindow = infoWindowsRef.current[nearest.id];
+
+                    // Open popup for the nearest one
+                    infoWindow.open(mapInstance, marker);
+
+                    const line = new kakao.maps.Polyline({
+                        map: mapInstance,
+                        path: [new kakao.maps.LatLng(lat, lng), new kakao.maps.LatLng(nearest.lat, nearest.lng)],
+                        strokeWeight: 6,
+                        strokeColor: '#FF0000',
+                        strokeOpacity: 0.8,
+                        strokeStyle: 'solid'
+                    });
+                    routeLineRef.current = line;
+
+                    const bounds = new kakao.maps.LatLngBounds();
+                    bounds.extend(new kakao.maps.LatLng(lat, lng));
+                    bounds.extend(new kakao.maps.LatLng(nearest.lat, nearest.lng));
+
+                    // In emergency (limit=1), we might want tighter zoom, but bounds usually works well
+                    mapInstance.setBounds(bounds);
+                }
+            };
+
             const handleFindLocation = (mode = 'normal') => {
                 if (!navigator.geolocation) {
                     alert("Geolocation is not supported.");
@@ -110,14 +201,12 @@
                     (position) => {
                         const { latitude, longitude } = position.coords;
                         const userLatLng = new kakao.maps.LatLng(latitude, longitude);
-
                         setUserLocation(userLatLng);
 
                         if (mapInstance) {
                             mapInstance.setCenter(userLatLng);
-                            mapInstance.setLevel(mode === 'emergency' ? 3 : 4);
 
-                            // User Marker logic...
+                            // User Marker
                             if (userMarkerRef.current) {
                                 userMarkerRef.current.setPosition(userLatLng);
                             } else {
@@ -134,12 +223,21 @@
                             }
 
                             if (mode === 'emergency') {
-                                // In emergency, find ONLY the closest one
-                                findNearest(latitude, longitude, 1);
+                                setIsEmergency(true);
+                                setShowMarkers(true); // Must show them to find nearest
+                                // Slightly defer to ensure state update or marker render?
+                                // React effects run after render, so direct call is fine if markers exist.
+                                // But if showMarkers was false, we need to wait for effect to render markers first?
+                                // Actually, 'findNearest' uses markersRef.current.
+                                // If we just set showMarkers(true), the effect to create markers runs *after* this render cycle.
+                                // So we need a timeout or useEffect dependency.
+                                // Simple fix: use setTimeout(..., 100) or check in useEffect.
+                                // Let's use setTimeout for safety in this simple app.
+                                setTimeout(() => findNearest(latitude, longitude, 1), 200);
                             } else {
-                                // Normal: Show all markers and list
+                                setIsEmergency(false);
                                 setShowMarkers(true);
-                                findNearest(latitude, longitude, 5);
+                                setTimeout(() => findNearest(latitude, longitude, 5), 200);
                             }
                         }
                     },
@@ -150,241 +248,12 @@
                 );
             };
 
-            const findNearest = (lat, lng, limit) => {
-                // ... (existing logic modified for limit and emergency)
-                // Need to update findNearest separately or here? 
-                // Let's modify the function signature in the next step or assume it handles it.
-                // For this edit, I'll leave the call but implementation needs to match.
-                // Actually I should update the existing findNearest implementation in the next block.
-                // Re-using the logic from previous step but adapting here.
-
-                // (Implementation continues in next tool call for findNearest update)
-            };
-
-            // Haversine Formula for distance (km)
-            const getDistance = (lat1, lon1, lat2, lon2) => {
-                const R = 6371; // Radius of the earth in km
-                const dLat = deg2rad(lat2 - lat1);
-                const dLon = deg2rad(lon2 - lon1);
-                const a =
-                    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-                const d = R * c; // Distance in km
-                return d;
-            };
-
-            const deg2rad = (deg) => {
-                return deg * (Math.PI / 180);
-            };
-
-            // 1. Fetch Data
-            useEffect(() => {
-                fetch('toilets.json')
-                    .then(res => res.json())
-                    .then(data => {
-                        console.log("Data loaded:", data.length);
-
-                        // Filter for Jeju only (approx Lat 32-34, Lng 126-127) and valid coords
-                        const jejuToilets = data.filter(t =>
-                            t.lat > 32 && t.lat < 35 &&
-                            t.lng > 125 && t.lng < 128 &&
-                            t.lat !== 0 && t.lng !== 0
-                        );
-
-                        console.log("Filtered Jeju toilets:", jejuToilets.length);
-                        setToilets(jejuToilets);
-                    })
-                    .catch(err => console.error("Failed to load data:", err));
-            }, []);
-
-            // 2. Initialize Map (Kakao)
-            useEffect(() => {
-                if (!mapRef.current) return;
-                if (mapInstance) return;
-
-                // Wait for Kakao SDK to load
-                if (!window.kakao || !window.kakao.maps) {
-                    alert("Kakao Maps API failed to load. Check your API Key and Domain settings.");
-                    return;
-                }
-
-                kakao.maps.load(() => {
-                    const container = mapRef.current;
-                    const options = {
-                        center: new kakao.maps.LatLng(33.4996, 126.5312), // Jeju City
-                        level: 9
-                    };
-
-                    const map = new kakao.maps.Map(container, options);
-                    setMapInstance(map);
-                });
-
-            }, [mapRef]);
-
-            // 3. Render Markers
-            useEffect(() => {
-                if (!mapInstance || toilets.length === 0) return;
-
-                toilets.forEach(toilet => {
-                    if (markersRef.current[toilet.id]) return;
-
-                    const position = new kakao.maps.LatLng(toilet.lat, toilet.lng);
-
-                    // Default marker
-                    const marker = new kakao.maps.Marker({
-                        position: position,
-                        map: mapInstance,
-                        title: toilet.name
-                    });
-
-                    // Custom Overlay for InfoWindow (Kakao style)
-                    // We use basic InfoWindow here for simplicity
-                    const contentString = `
-                        <div class="popup-content" style="padding:10px; min-width:200px; background:white; border-radius:5px; border:1px solid #ccc;">
-                            <h3 style="margin:0 0 5px;">${toilet.name}</h3>
-                            <p style="margin:5px 0; font-size:13px; color:#666;">${toilet.address}</p>
-                            <p style="margin:5px 0; font-size:13px;"><strong>Open:</strong> ${toilet.openTime}</p>
-                            <div style="margin-top:5px;">
-                                ${toilet.type === 'Public' ? '<span class="tag">Public</span>' : '<span class="tag">Tourist</span>'}
-                                ${toilet.unisex ? '<span class="tag">Unisex</span>' : ''}
-                                ${toilet.diaperTable ? '<span class="tag">Diaper Table</span>' : ''}
-                            </div>
-                        </div>
-                    `;
-
-                    const infoWindow = new kakao.maps.InfoWindow({
-                        content: contentString,
-                        removable: true
-                    });
-
-                    kakao.maps.event.addListener(marker, 'click', function () {
-                        // Close others
-                        Object.values(infoWindowsRef.current).forEach(iw => iw.close());
-                        infoWindow.open(mapInstance, marker);
-                    });
-
-                    markersRef.current[toilet.id] = marker;
-                    infoWindowsRef.current[toilet.id] = infoWindow;
-                });
-
-            }, [mapInstance, toilets]);
-
-            // 4. Handle GPS
-            const handleFindLocation = () => {
-                if (!navigator.geolocation) {
-                    alert("Geolocation is not supported by your browser.");
-                    return;
-                }
-
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const { latitude, longitude } = position.coords;
-                        const userLatLng = new kakao.maps.LatLng(latitude, longitude);
-
-                        setUserLocation(userLatLng);
-
-                        if (mapInstance) {
-                            mapInstance.setCenter(userLatLng);
-                            mapInstance.setLevel(4); // Zoom in
-
-                            // User Marker
-                            if (userMarkerRef.current) {
-                                userMarkerRef.current.setPosition(userLatLng);
-                            } else {
-                                // Use a different image for user or default marker for now
-                                const imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png";
-                                const imageSize = new kakao.maps.Size(64, 69);
-                                const imageOption = { offset: new kakao.maps.Point(27, 69) };
-                                const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption);
-
-                                userMarkerRef.current = new kakao.maps.Marker({
-                                    position: userLatLng,
-                                    map: mapInstance,
-                                    image: markerImage,
-                                    zIndex: 1000
-                                });
-                            }
-
-                            findNearest(latitude, longitude);
-                        }
-                    },
-                    (error) => {
-                        console.error(error);
-                        alert("Unable to retrieve your location.");
-                    }
-                );
-            };
-
-            const findNearest = (lat, lng) => {
-                if (toilets.length === 0) return;
-
-                // Close all info windows
-                Object.values(infoWindowsRef.current).forEach(iw => iw.close());
-
-                // Remove existing line
-                if (routeLineRef.current) {
-                    routeLineRef.current.setMap(null);
-                    routeLineRef.current = null;
-                }
-
-                // Calculate distance for ALL toilets
-                const toiletsWithDist = toilets.map(t => {
-                    const distKm = getDistance(lat, lng, t.lat, t.lng);
-                    return { ...t, dist: distKm };
-                });
-
-                // Sort by distance
-                toiletsWithDist.sort((a, b) => a.dist - b.dist);
-
-                // Take top 5
-                const top5 = toiletsWithDist.slice(0, 5);
-                setNearestList(top5);
-                setIsListVisible(true);
-
-                const nearest = top5[0];
-
-                if (nearest && markersRef.current[nearest.id]) {
-                    const nearestMarker = markersRef.current[nearest.id];
-                    const nearestInfoWindow = infoWindowsRef.current[nearest.id];
-                    const userLatLng = new kakao.maps.LatLng(lat, lng);
-                    const nearestLatLng = new kakao.maps.LatLng(nearest.lat, nearest.lng);
-
-                    // 1. Open Popup
-                    nearestInfoWindow.open(mapInstance, nearestMarker);
-
-                    // 2. Draw Polyline
-                    const polyline = new kakao.maps.Polyline({
-                        map: mapInstance,
-                        path: [userLatLng, nearestLatLng],
-                        strokeWeight: 5,
-                        strokeColor: '#FF0000',
-                        strokeOpacity: 0.7,
-                        strokeStyle: 'dashed'
-                    });
-                    routeLineRef.current = polyline;
-
-                    // 3. Fit Bounds to include user and nearest
-                    const bounds = new kakao.maps.LatLngBounds();
-                    bounds.extend(userLatLng);
-                    bounds.extend(nearestLatLng);
-
-                    // Also extend to include a bit more context if very close
-                    mapInstance.setBounds(bounds);
-                }
-            };
-
             const handleToiletClick = (toilet) => {
                 if (!mapInstance || !markersRef.current[toilet.id]) return;
-
                 const marker = markersRef.current[toilet.id];
                 const infoWindow = infoWindowsRef.current[toilet.id];
 
-                // Close others
                 Object.values(infoWindowsRef.current).forEach(iw => iw.close());
-
-                // Open this one
                 infoWindow.open(mapInstance, marker);
                 mapInstance.setCenter(marker.getPosition());
                 mapInstance.setLevel(3);
@@ -393,7 +262,7 @@
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                     <header>
-                        <h1>Jeju Restroom Finder (Kakao Map) 🚽</h1>
+                        <h1>Jeju Restroom Finder 🚽</h1>
                     </header>
                     <div className="map-container">
                         <div id="map" ref={mapRef}></div>
@@ -404,7 +273,7 @@
                                 <h3 style={{ margin: 0 }}>🚽 Nearest Restrooms</h3>
                                 <button onClick={() => setIsListVisible(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>×</button>
                             </div>
-                            {/* Debug Info */}
+
                             {userLocation && (
                                 <div style={{ fontSize: '0.8rem', color: '#666', marginBottom: '10px', textAlign: 'center', backgroundColor: '#f0f0f0', padding: '5px', borderRadius: '4px' }}>
                                     📍 인식된 위치: {userLocation.getLat().toFixed(4)}, {userLocation.getLng().toFixed(4)}
@@ -430,7 +299,6 @@
                             ))}
                         </div>
 
-
                         <button className="find-btn" onClick={() => handleFindLocation('normal')}>
                             <span>📍</span> 내 주변 화장실
                         </button>
@@ -445,7 +313,7 @@
                                 height: '80px',
                                 borderRadius: '50%',
                                 border: 'none',
-                                background: 'red',
+                                background: '#dc3545', /* Warning Red */
                                 color: 'white',
                                 fontWeight: 'bold',
                                 fontSize: '1.2rem',
@@ -459,7 +327,7 @@
                                 animation: 'pulse 2s infinite'
                             }}
                         >
-                            <span>🚨</span>
+                            <span style={{ fontSize: '1.5rem', marginBottom: '2px' }}>🚨</span>
                             <span style={{ fontSize: '0.8rem' }}>급해요</span>
                         </button>
                     </div>
@@ -469,6 +337,14 @@
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
+    </script>
+    <script>
+        // Global review stub
+        window.submitReview = (id, type) => {
+            alert(`Review submitted for ID ${id}: ${type}!\n(This is a demo feature)`);
+            const span = document.getElementById(`score-${id}`);
+            if (span) span.innerText = "(1)";
+        };
     </script>
 </body>
 
