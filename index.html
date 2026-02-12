@@ -495,6 +495,18 @@
                                 <button onClick={handleSearchAddress} style={{ padding: '8px 12px', background: '#ff7f00', color: 'white', border: 'none', borderRadius: '15px', cursor: 'pointer' }}>🔍</button>
                             </div>
 
+                            {/* My Location Button (Moved) */}
+                            <button
+                                onClick={() => handleFindLocation('normal')}
+                                style={{
+                                    width: '100%', padding: '10px', background: '#4CAF50', color: 'white',
+                                    border: 'none', borderRadius: '15px', fontWeight: 'bold', cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px'
+                                }}
+                            >
+                                📍 내 주변 화장실 찾기
+                            </button>
+
                             {/* Radius Buttons (Visible only when searching) */}
                             {searchCenter && (
                                 <div style={{ display: 'flex', gap: '5px', justifyContent: 'center' }}>
@@ -545,10 +557,6 @@
                                 </div>
                             ))}
                         </div>
-
-                        <button className="find-btn" onClick={() => handleFindLocation('normal')} style={{ bottom: '70px' }}>
-                            <span>📍</span> 내 주변
-                        </button>
 
                         <button onClick={() => handleFindLocation('emergency')}
                             style={{
