@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gpx version="1.1" creator="Antigravity - Manual Creation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.topografix.com/GPX/1/1">
+   <rte>
+      <name>ollegil 18-1</name>
+      <!-- Sangchuja Port -->
+      <rtept lat="33.9620" lon="126.2990"><ele>10</ele></rtept>
+      <!-- Bonggeulsan -->
+      <rtept lat="33.9640" lon="126.3020"><ele>50</ele></rtept>
+      <!-- Nabron Beach -->
+      <rtept lat="33.9600" lon="126.3080"><ele>10</ele></rtept>
+      <!-- Chuja Bridge (Crossing to Hachuja) -->
+      <rtept lat="33.9555" lon="126.3055"><ele>10</ele></rtept>
+      <!-- Muk-ri -->
+      <rtept lat="33.9480" lon="126.3100"><ele>20</ele></rtept>
+      <!-- Sinyang Port (Detailed Loop - Hachuja South) -->
+      <rtept lat="33.9380" lon="126.3250"><ele>10</ele></rtept>
+      <!-- Yecho-ri -->
+      <rtept lat="33.9450" lon="126.3300"><ele>30</ele></rtept>
+      <!-- Back towards Bridge -->
+      <rtept lat="33.9500" lon="126.3150"><ele>20</ele></rtept>
+      <!-- Chuja Bridge (Return) -->
+      <rtept lat="33.9555" lon="126.3055"><ele>10</ele></rtept>
+      <!-- Yeongheung-ri -->
+      <rtept lat="33.9600" lon="126.3000"><ele>10</ele></rtept>
+      <!-- Sangchuja Port (Finish) -->
+      <rtept lat="33.9620" lon="126.2990"><ele>10</ele></rtept>
+   </rte>
+</gpx>

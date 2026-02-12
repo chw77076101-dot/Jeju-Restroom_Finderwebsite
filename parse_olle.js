@@ -60,11 +60,11 @@ try {
             return;
         }
 
-        // User requested to exclude Chuja-do (18-1)
-        if (courseId === '18-1') {
-            console.log(`Skipping Chuja-do (18-1) as requested`);
-            return;
-        }
+        // User requested to exclude Chuja-do (18-1) - now re-requested to INCLUDE.
+        // if (courseId === '18-1') {
+        //    console.log(`Skipping Chuja-do (18-1) as requested`);
+        //    return;
+        // }
 
         console.log(`Processing Course ${courseId} from ${file}...`);
 
