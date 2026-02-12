@@ -507,8 +507,12 @@
                     <header>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <h1 style={{ fontSize: '1.2rem', margin: 0 }}>제주도 전지역 화장실 🚽 <span style={{ fontSize: '0.8rem', color: '#888' }}>v1.3</span></h1>
-                                <button onClick={() => setShowHelp(true)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>❓</button>
+                                <h1 style={{ fontSize: '1.2rem', margin: 0 }}>제주도 전지역 화장실 🚽 <span style={{ fontSize: '0.8rem', color: '#888' }}>v1.4</span></h1>
+                                <button onClick={() => setShowHelp(true)} style={{
+                                    background: 'white', border: '1px solid #ccc', fontSize: '1.2rem', cursor: 'pointer',
+                                    borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    boxShadow: '0 2px 5px rgba(0,0,0,0.1)', marginLeft: '10px'
+                                }}>❓</button>
                             </div>
 
                             <select onChange={(e) => handleOlleSelect(e.target.value)} style={{ padding: '5px', borderRadius: '15px', border: '1px solid #ff7f00', outline: 'none', fontSize: '0.9rem' }} value={selectedCourse || ""}>
