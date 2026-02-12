@@ -61,8 +61,17 @@
                 fetch('toilets.json')
                     .then(res => res.json())
                     .then(data => {
-                        console.log("Data loaded:", data);
-                        setToilets(data);
+                        console.log("Data loaded:", data.length);
+
+                        // Filter for Jeju only (approx Lat 32-34, Lng 126-127) and valid coords
+                        const jejuToilets = data.filter(t =>
+                            t.lat > 32 && t.lat < 35 &&
+                            t.lng > 125 && t.lng < 128 &&
+                            t.lat !== 0 && t.lng !== 0
+                        );
+
+                        console.log("Filtered Jeju toilets:", jejuToilets.length);
+                        setToilets(jejuToilets);
                     })
                     .catch(err => console.error("Failed to load data:", err));
             }, []);
