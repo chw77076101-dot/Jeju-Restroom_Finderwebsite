@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jeju Restroom Finder</title>
+    <title>제주도 전지역 화장실</title>
 
     <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
@@ -29,7 +29,7 @@
         const { useState, useEffect, useRef } = React;
 
         function App() {
-            // State
+            // ... (State same) ...
             const [toilets, setToilets] = useState([]);
             const [userLocation, setUserLocation] = useState(null);
             const [mapInstance, setMapInstance] = useState(null);
@@ -40,12 +40,11 @@
             const [selectedCourse, setSelectedCourse] = useState(null);
             const [showAll, setShowAll] = useState(false); // Global Toggle
 
-            // Address Search State
+            // ... (Rest of state) ...
             const [searchAddress, setSearchAddress] = useState("");
             const [searchRadius, setSearchRadius] = useState(0); // 0 = off, 1, 3, 5 km
             const [searchCenter, setSearchCenter] = useState(null); // LatLng of searched address
 
-            // Refs
             const mapRef = useRef(null);
             const markersRef = useRef({});
             const infoWindowsRef = useRef({});
@@ -160,7 +159,8 @@
 
                     const stats = getReviewStats(toilet.id);
                     const kakaoNaviUrl = `https://map.kakao.com/link/to/${toilet.name},${toilet.lat},${toilet.lng}`;
-                    const tMapUrl = `tmap://route?goalname=${toilet.name}&goalx=${toilet.lng}&goaly=${toilet.lat}`;
+                    const naverMapUrl = `https://m.map.naver.com/route.nhn?menu=route&elng=${toilet.lng}&elat=${toilet.lat}&etext=${encodeURIComponent(toilet.name)}`;
+                    const googleMapUrl = `https://www.google.com/maps/dir/?api=1&destination=${toilet.lat},${toilet.lng}`;
 
                     const contentString = `
                         <div class="popup-content" style="padding:10px; min-width:220px; background:white; border-radius:10px; border:1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
@@ -168,8 +168,9 @@
                             <p style="margin:5px 0; font-size:13px; color:#666;">${toilet.address}</p>
                             
                             <div style="display:flex; gap:5px; margin: 8px 0;">
-                                <a href="${kakaoNaviUrl}" target="_blank" style="flex:1; text-align:center; background:#FAE100; color:#3C1E1E; padding:5px; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">Kakao 길찾기</a>
-                                <a href="${tMapUrl}" style="flex:1; text-align:center; background:#00C73C; color:white; padding:5px; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">TMap</a>
+                                <a href="${kakaoNaviUrl}" target="_blank" style="flex:1; text-align:center; background:#FAE100; color:#3C1E1E; padding:5px; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">Kakao</a>
+                                <a href="${naverMapUrl}" target="_blank" style="flex:1; text-align:center; background:#03C75A; color:white; padding:5px; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">Naver</a>
+                                <a href="${googleMapUrl}" target="_blank" style="flex:1; text-align:center; background:#4285F4; color:white; padding:5px; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">Google</a>
                             </div>
 
                             <div style="margin-top:8px; border-top:1px solid #eee; padding-top:8px;" id="review-box-${toilet.id}">
@@ -206,7 +207,7 @@
                 });
             }, [mapInstance, toilets, showMarkers, selectedCourse, searchCenter, searchRadius, showAll]);
 
-            // Find Nearest Logic
+            // ... (Find Nearest Logic same) ...
             const findNearest = (lat, lng, limit) => {
                 if (toilets.length === 0) return;
 
@@ -253,6 +254,7 @@
                 }
             };
 
+            // ... (handleFindLocation same) ...
             const handleFindLocation = (mode = 'normal') => {
                 // Reset other modes
                 setShowAll(false);
@@ -310,6 +312,7 @@
                 );
             };
 
+            // ... (handleOlleSelect same) ...
             const handleOlleSelect = (courseId) => {
                 // Reset others
                 setShowAll(false);
@@ -357,6 +360,7 @@
                 }
             };
 
+            // ... (handleToiletClick same) ...
             const handleToiletClick = (toilet) => {
                 if (!mapInstance || !markersRef.current[toilet.id]) return;
                 const marker = markersRef.current[toilet.id];
@@ -368,6 +372,7 @@
                 mapInstance.setLevel(3);
             };
 
+            // ... (handleSearchAddress same) ...
             const handleSearchAddress = () => {
                 if (!searchAddress || !mapInstance) return;
 
@@ -407,6 +412,7 @@
                 });
             };
 
+            // ... (updateRadiusCircle same) ...
             const updateRadiusCircle = (center, km) => {
                 if (!mapInstance || !center) return;
                 setSearchRadius(km);
@@ -439,7 +445,7 @@
                     <header>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <h1 style={{ fontSize: '1.2rem', margin: 0 }}>Jeju Restroom 🚽</h1>
+                                <h1 style={{ fontSize: '1.2rem', margin: 0 }}>제주도 전지역 화장실 🚽</h1>
                                 <select onChange={(e) => handleOlleSelect(e.target.value)} style={{ padding: '5px', borderRadius: '15px', border: '1px solid #ff7f00', outline: 'none', fontSize: '0.9rem' }} value={selectedCourse || ""}>
                                     <option value="">🚶 올레길 선택 (전체 코스)</option>
                                     {window.OLLE_COURSES && Object.keys(window.OLLE_COURSES).sort((a, b) => {
@@ -540,7 +546,7 @@
                             ))}
                         </div>
 
-                        <button className="find-btn" onClick={() => handleFindLocation('normal')}>
+                        <button className="find-btn" onClick={() => handleFindLocation('normal')} style={{ bottom: '70px' }}>
                             <span>📍</span> 내 주변
                         </button>
 
