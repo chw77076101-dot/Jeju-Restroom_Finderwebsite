@@ -44,6 +44,7 @@
             const [isEmergency, setIsEmergency] = useState(false);
             const [selectedCourse, setSelectedCourse] = useState(null);
             const [showAll, setShowAll] = useState(false); // Global Toggle
+            const [showHelp, setShowHelp] = useState(false); // Help Modal
 
             // ... (Rest of state) ...
             const [searchAddress, setSearchAddress] = useState("");
@@ -507,20 +508,22 @@
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <h1 style={{ fontSize: '1.2rem', margin: 0 }}>제주도 전지역 화장실 🚽 <span style={{ fontSize: '0.8rem', color: '#888' }}>v1.3</span></h1>
-                                <select onChange={(e) => handleOlleSelect(e.target.value)} style={{ padding: '5px', borderRadius: '15px', border: '1px solid #ff7f00', outline: 'none', fontSize: '0.9rem' }} value={selectedCourse || ""}>
-                                    <option value="">🚶 올레길 선택 (전체 코스)</option>
-                                    {window.OLLE_COURSES && Object.keys(window.OLLE_COURSES).sort((a, b) => {
-                                        const numA = parseFloat(a);
-                                        const numB = parseFloat(b);
-                                        if (numA !== numB) return numA - numB;
-                                        return a.localeCompare(b);
-                                    }).map(id => (
-                                        <option key={id} value={id}>
-                                            {window.OLLE_COURSES[id].name}
-                                        </option>
-                                    ))}
-                                </select>
+                                <button onClick={() => setShowHelp(true)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>❓</button>
                             </div>
+
+                            <select onChange={(e) => handleOlleSelect(e.target.value)} style={{ padding: '5px', borderRadius: '15px', border: '1px solid #ff7f00', outline: 'none', fontSize: '0.9rem' }} value={selectedCourse || ""}>
+                                <option value="">🚶 올레길 선택 (전체 코스)</option>
+                                {window.OLLE_COURSES && Object.keys(window.OLLE_COURSES).sort((a, b) => {
+                                    const numA = parseFloat(a);
+                                    const numB = parseFloat(b);
+                                    if (numA !== numB) return numA - numB;
+                                    return a.localeCompare(b);
+                                }).map(id => (
+                                    <option key={id} value={id}>
+                                        {window.OLLE_COURSES[id].name}
+                                    </option>
+                                ))}
+                            </select>
 
                             {/* Show All Toggle */}
                             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', cursor: 'pointer', padding: '0 5px' }}>
@@ -556,7 +559,7 @@
                                 <button onClick={handleSearchAddress} style={{ padding: '8px 12px', background: '#ff7f00', color: 'white', border: 'none', borderRadius: '15px', cursor: 'pointer' }}>🔍</button>
                             </div>
 
-                            {/* My Location Button (Moved) */}
+                            {/* My Location Button */}
                             <button
                                 onClick={() => handleFindLocation('normal')}
                                 style={{
@@ -590,7 +593,6 @@
                                     ))}
                                 </div>
                             )}
-
                         </div>
                     </header>
                     <div className="map-container">
@@ -619,9 +621,10 @@
                             ))}
                         </div>
 
+                        {/* Emergency Button */}
                         <button onClick={() => handleFindLocation('emergency')}
                             onTouchEnd={(e) => {
-                                e.preventDefault(); // Prevent ghost click
+                                e.preventDefault();
                                 handleFindLocation('emergency');
                             }}
                             style={{
@@ -637,6 +640,57 @@
                             <span style={{ fontSize: '0.8rem' }}>급해요</span>
                         </button>
                     </div>
+
+                    {/* Help Modal */}
+                    {showHelp && (
+                        <div style={{
+                            position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                            background: 'rgba(0,0,0,0.6)', zIndex: 10000, display: 'flex',
+                            justifyContent: 'center', alignItems: 'center', padding: '20px'
+                        }} onClick={() => setShowHelp(false)}>
+                            <div style={{
+                                background: 'white', padding: '20px', borderRadius: '15px',
+                                maxWidth: '400px', width: '100%', boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+                                overflowY: 'auto', maxHeight: '80vh'
+                            }} onClick={(e) => e.stopPropagation()}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+                                    <h2 style={{ margin: 0, color: '#ff7f00' }}>🍊 사용 설명서</h2>
+                                    <button onClick={() => setShowHelp(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+                                </div>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                                    <div>
+                                        <strong>🚨 급해요! (SOS)</strong>
+                                        <p style={{ margin: '5px 0 0', color: '#555' }}>화면 우측 하단 빨간 버튼을 누르면, 현재 위치에서 <strong>가장 가까운 화장실 5곳</strong>을 즉시 찾아줍니다.</p>
+                                    </div>
+                                    <div>
+                                        <strong>📍 내 주변 화장실</strong>
+                                        <p style={{ margin: '5px 0 0', color: '#555' }}>'내 주변 화장실 찾기' 버튼을 누르면 반경 <strong>1km ~ 10km</strong> 내의 화장실을 골라서 볼 수 있습니다.</p>
+                                    </div>
+                                    <div>
+                                        <strong>🚶 올레길 코스</strong>
+                                        <p style={{ margin: '5px 0 0', color: '#555' }}>상단 메뉴에서 올레길 코스를 선택하면, 해당 코스 주변의 화장실만 필터링됩니다.</p>
+                                    </div>
+                                    <div>
+                                        <strong>🗺️ 길찾기 & 거리</strong>
+                                        <p style={{ margin: '5px 0 0', color: '#555' }}>화장실 핀을 클릭하면 <strong>직선 거리와 경로(빨간선)</strong>가 표시되며, 카카오/네이버/구글 지도로 길안내를 받을 수 있습니다.</p>
+                                    </div>
+                                    <div style={{ background: '#fff3cd', padding: '10px', borderRadius: '8px' }}>
+                                        <strong>📱 꿀팁: 앱처럼 쓰기</strong>
+                                        <p style={{ margin: '5px 0 0', fontSize: '0.9rem' }}>브라우저 메뉴에서 <strong>'홈 화면에 추가'</strong>를 누르면 앱처럼 설치해서 편하게 쓸 수 있어요!</p>
+                                    </div>
+                                </div>
+
+                                <button onClick={() => setShowHelp(false)} style={{
+                                    width: '100%', padding: '12px', marginTop: '20px',
+                                    background: '#ff7f00', color: 'white', border: 'none',
+                                    borderRadius: '10px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer'
+                                }}>
+                                    확인했어요! 👍
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         }
