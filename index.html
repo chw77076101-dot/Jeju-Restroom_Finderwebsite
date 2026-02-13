@@ -720,220 +720,146 @@
                                 ))}
                             </div>
 
-                            position: 'absolute', top: '15px', right: '15px',
-                            background: '#f0f0f0', border: 'none', borderRadius: '50%',
-                            width: '30px', height: '30px', cursor: 'pointer', fontSize: '1.2rem'
-                                        }}>×</button>
 
-                        <h2 style={{ fontSize: '1.5rem', marginBottom: '5px' }}>{selectedToilet.name}</h2>
-                        <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '15px' }}>{selectedToilet.address || t('addressInfo')}</p>
-
-                        <div style={{ display: 'flex', gap: '5px', marginBottom: '20px' }}>
-                            <button onClick={() => {
-                                setSelectedToilet(null);
-                                handleToiletClick(selectedToilet); // Draw route
-                            }} style={{
-                                flex: 1, padding: '10px', background: '#ff7f00', color: 'white',
-                                border: 'none', borderRadius: '10px', fontWeight: 'bold'
-                            }}>{t('helpMap')}</button>
-                        </div>
-
-                        <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '20px 0' }} />
-
-                        {/* Review Section */}
-                        <h3 style={{ fontSize: '1.2rem' }}>⭐ 리뷰 & 사진</h3>
-
-                        {/* Write Review Form */}
-                        <div style={{ background: '#f9f9f9', padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
-                            <div style={{ marginBottom: '10px', display: 'flex', gap: '5px' }}>
-                                {[1, 2, 3, 4, 5].map(star => (
-                                    <span key={star} onClick={() => setReviewRating(star)} style={{
-                                        fontSize: '1.5rem', cursor: 'pointer',
-                                        color: star <= reviewRating ? '#ffc107' : '#ddd'
-                                    }}>★</span>
-                                ))}
-                            </div>
-                            <textarea
-                                placeholder="화장실 상태는 어떤가요? (휴지 유무, 청결도 등)"
-                                value={reviewText}
-                                onChange={(e) => setReviewText(e.target.value)}
-                                style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ddd', marginBottom: '10px', height: '80px', resize: 'none' }}
-                            ></textarea>
-                            <div style={{ display: 'flex', gap: '10px' }}>
-                                <input type="file" accept="image/*" onChange={handleImageUpload} style={{ fontSize: '0.9rem' }} />
-                                <button onClick={submitReview} style={{
-                                    marginLeft: 'auto', padding: '8px 15px', background: '#333', color: 'white',
-                                    border: 'none', borderRadius: '5px', cursor: 'pointer'
-                                }}>등록</button>
-                            </div>
-                        </div>
-
-                        {/* Review List */}
-                        <div className="review-list" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                            {currentReviews.length === 0 ? (
-                                <p style={{ color: '#888', textAlign: 'center', padding: '20px' }}>
-                                    아직 작성된 리뷰가 없습니다.<br />첫 번째 리뷰를 남겨주세요!
-                                </p>
-                            ) : (
-                                currentReviews.map((review, idx) => (
-                                    <div key={idx} style={{ borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                                            <span style={{ color: '#ffc107' }}>{'★'.repeat(review.rating)}</span>
-                                            <span style={{ fontSize: '0.8rem', color: '#888' }}>{new Date(review.createdAt).toLocaleDateString()}</span>
-                                        </div>
-                                        <p style={{ margin: '0 0 10px', fontSize: '0.95rem' }}>{review.text}</p>
-                                        {review.imageUrl && (
-                                            <img src={review.imageUrl} alt="Review" style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '5px' }} />
-                                        )}
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
-                                </div >
-                            )
-        }
-
-        {/* Emergency Button */ }
-        <button onClick={() => handleFindLocation('emergency')}
-            onTouchEnd={(e) => {
-                e.preventDefault();
-                handleFindLocation('emergency');
-            }}
-            style={{
-                position: 'absolute', bottom: '150px', right: '20px', width: '80px', height: '80px',
-                borderRadius: '50%', border: 'none', background: '#dc3545', color: 'white',
-                fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
-                zIndex: 9999, cursor: 'pointer', display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center', animation: 'pulse 2s infinite',
-                userSelect: 'none', WebkitUserSelect: 'none'
-            }}
-        >
-            <span style={{ fontSize: '1.5rem', marginBottom: '2px' }}>🚨</span>
-            <span style={{ fontSize: '0.8rem' }}>{t('emergency')}</span>
-        </button>
+                            <button onClick={() => handleFindLocation('emergency')}
+                                onTouchEnd={(e) => {
+                                    e.preventDefault();
+                                    handleFindLocation('emergency');
+                                }}
+                                style={{
+                                    position: 'absolute', bottom: '150px', right: '20px', width: '80px', height: '80px',
+                                    borderRadius: '50%', border: 'none', background: '#dc3545', color: 'white',
+                                    fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+                                    zIndex: 9999, cursor: 'pointer', display: 'flex', flexDirection: 'column',
+                                    alignItems: 'center', justifyContent: 'center', animation: 'pulse 2s infinite',
+                                    userSelect: 'none', WebkitUserSelect: 'none'
+                                }}
+                            >
+                                <span style={{ fontSize: '1.5rem', marginBottom: '2px' }}>🚨</span>
+                                <span style={{ fontSize: '0.8rem' }}>{t('emergency')}</span>
+                            </button>
                         </div >
 
-            {/* Help Modal */ }
-        {
-            showHelp && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-                    background: 'rgba(0,0,0,0.6)', zIndex: 10000, display: 'flex',
-                    justifyContent: 'center', alignItems: 'center', padding: '10px'
-                }} onClick={() => setShowHelp(false)}>
-                    <div style={{
-                        background: 'white', padding: '15px', borderRadius: '15px',
-                        maxWidth: '340px', width: '90%', boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
-                        overflowY: 'auto', maxHeight: '85vh', boxSizing: 'border-box'
-                    }} onClick={(e) => e.stopPropagation()}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                            <h2 style={{ margin: 0, color: '#ff7f00' }}>{t('helpTitle')}</h2>
-                            <button onClick={() => setShowHelp(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
-                        </div>
+                        {/* Help Modal */}
+                        {
+                            showHelp && (
+                                <div style={{
+                                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                                    background: 'rgba(0,0,0,0.6)', zIndex: 10000, display: 'flex',
+                                    justifyContent: 'center', alignItems: 'center', padding: '10px'
+                                }} onClick={() => setShowHelp(false)}>
+                                    <div style={{
+                                        background: 'white', padding: '15px', borderRadius: '15px',
+                                        maxWidth: '340px', width: '90%', boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+                                        overflowY: 'auto', maxHeight: '85vh', boxSizing: 'border-box'
+                                    }} onClick={(e) => e.stopPropagation()}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                            <h2 style={{ margin: 0, color: '#ff7f00' }}>{t('helpTitle')}</h2>
+                                            <button onClick={() => setShowHelp(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+                                        </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontSize: '0.95rem', lineHeight: '1.5' }}>
-                            <div>
-                                <strong>{t('helpSOS')}</strong>
-                                <p style={{ margin: '5px 0 0', color: '#555' }}>{t('helpSOSDesc')}</p>
-                            </div>
-                            <div>
-                                <strong>{t('helpNear')}</strong>
-                                <p style={{ margin: '5px 0 0', color: '#555' }}>{t('helpNearDesc')}</p>
-                            </div>
-                            <div>
-                                <strong>{t('helpOlle')}</strong>
-                                <p style={{ margin: '5px 0 0', color: '#555' }}>{t('helpOlleDesc')}</p>
-                            </div>
-                            <div>
-                                <strong>{t('helpMap')}</strong>
-                                <p style={{ margin: '5px 0 0', color: '#555' }}>{t('helpMapDesc')}</p>
-                            </div>
-                            <div style={{ background: '#fff3cd', padding: '10px', borderRadius: '8px' }}>
-                                <strong>{t('helpApp')}</strong>
-                                <p style={{ margin: '5px 0 0', fontSize: '0.9rem' }}>{t('helpAppDesc')}</p>
-                            </div>
-                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                                            <div>
+                                                <strong>{t('helpSOS')}</strong>
+                                                <p style={{ margin: '5px 0 0', color: '#555' }}>{t('helpSOSDesc')}</p>
+                                            </div>
+                                            <div>
+                                                <strong>{t('helpNear')}</strong>
+                                                <p style={{ margin: '5px 0 0', color: '#555' }}>{t('helpNearDesc')}</p>
+                                            </div>
+                                            <div>
+                                                <strong>{t('helpOlle')}</strong>
+                                                <p style={{ margin: '5px 0 0', color: '#555' }}>{t('helpOlleDesc')}</p>
+                                            </div>
+                                            <div>
+                                                <strong>{t('helpMap')}</strong>
+                                                <p style={{ margin: '5px 0 0', color: '#555' }}>{t('helpMapDesc')}</p>
+                                            </div>
+                                            <div style={{ background: '#fff3cd', padding: '10px', borderRadius: '8px' }}>
+                                                <strong>{t('helpApp')}</strong>
+                                                <p style={{ margin: '5px 0 0', fontSize: '0.9rem' }}>{t('helpAppDesc')}</p>
+                                            </div>
+                                        </div>
 
-                        <button onClick={() => setShowHelp(false)} style={{
-                            width: '100%', padding: '12px', marginTop: '20px',
-                            background: '#ff7f00', color: 'white', border: 'none',
-                            borderRadius: '10px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer'
-                        }}>
-                            {t('confirm')}
-                        </button>
-                    </div>
-                </div>
-            )
-        }
+                                        <button onClick={() => setShowHelp(false)} style={{
+                                            width: '100%', padding: '12px', marginTop: '20px',
+                                            background: '#ff7f00', color: 'white', border: 'none',
+                                            borderRadius: '10px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer'
+                                        }}>
+                                            {t('confirm')}
+                                        </button>
+                                    </div>
+                                </div>
+                            )
+                        }
                     </div >
                 );
             }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+            root.render(<App />);
     </script>
     <script>
-        // Global Review Handler
-        window.handleReview = (id, action) => {
-            const storage = JSON.parse(localStorage.getItem('jeju_reviews') || '{}');
-            const current = storage[id] || { good: 0, bad: 0, userAction: null };
+            // Global Review Handler
+            window.handleReview = (id, action) => {
+                const storage = JSON.parse(localStorage.getItem('jeju_reviews') || '{}');
+                const current = storage[id] || { good: 0, bad: 0, userAction: null };
 
-            // Logic: Toggle if same, Switch if different
-            if (current.userAction === action) {
-                // Cancel
-                current[action]--;
-                current.userAction = null;
-            } else {
-                // Switch
-                if (current.userAction) current[current.userAction]--; // Decrease old
-                current[action]++; // Increase new
-                current.userAction = action;
-            }
+                // Logic: Toggle if same, Switch if different
+                if (current.userAction === action) {
+                    // Cancel
+                    current[action]--;
+                    current.userAction = null;
+                } else {
+                    // Switch
+                    if (current.userAction) current[current.userAction]--; // Decrease old
+                    current[action]++; // Increase new
+                    current.userAction = action;
+                }
 
-            storage[id] = current;
-            localStorage.setItem('jeju_reviews', JSON.stringify(storage));
+                storage[id] = current;
+                localStorage.setItem('jeju_reviews', JSON.stringify(storage));
 
-            alert(`리뷰가 반영되었습니다: ${action === 'good' ? '좋아요' : '별로예요'}`);
-        };
+                alert(`리뷰가 반영되었습니다: ${action === 'good' ? '좋아요' : '별로예요'}`);
+            };
 
-        // Naver Map Deep Link Handler
-        window.openNaverMap = (lat, lng, name) => {
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            const urlName = encodeURIComponent(name);
-            const appUrl = `nmap://route/public?dlat=${lat}&dlng=${lng}&dname=${urlName}&appname=JejuRestroom`;
-            const webUrl = `https://m.map.naver.com/route.nhn?menu=route&elng=${lng}&elat=${lat}&etext=${urlName}`;
+            // Naver Map Deep Link Handler
+            window.openNaverMap = (lat, lng, name) => {
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                const urlName = encodeURIComponent(name);
+                const appUrl = `nmap://route/public?dlat=${lat}&dlng=${lng}&dname=${urlName}&appname=JejuRestroom`;
+                const webUrl = `https://m.map.naver.com/route.nhn?menu=route&elng=${lng}&elat=${lat}&etext=${urlName}`;
 
-            if (isMobile) {
-                // Try App
-                const start = new Date().getTime();
-                window.location.href = appUrl;
+                if (isMobile) {
+                    // Try App
+                    const start = new Date().getTime();
+                    window.location.href = appUrl;
 
-                // Fallback to Web if App doesn't open
-                setTimeout(() => {
-                    if (new Date().getTime() - start < 2000) {
-                        window.open(webUrl, '_blank');
-                    }
-                }, 1500);
-            } else {
-                // Desktop -> Web
-                window.open(webUrl, '_blank');
-            }
-        };
+                    // Fallback to Web if App doesn't open
+                    setTimeout(() => {
+                        if (new Date().getTime() - start < 2000) {
+                            window.open(webUrl, '_blank');
+                        }
+                    }, 1500);
+                } else {
+                    // Desktop -> Web
+                    window.open(webUrl, '_blank');
+                }
+            };
     </script>
     <script>
-        // Service Worker Registration for PWA
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                    })
-                    .catch(err => {
-                        console.log('ServiceWorker registration failed: ', err);
-                    });
-            });
-        }
+            // Service Worker Registration for PWA
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('./sw.js')
+                        .then(registration => {
+                            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                        })
+                        .catch(err => {
+                            console.log('ServiceWorker registration failed: ', err);
+                        });
+                });
+            }
     </script>
 </body>
 
