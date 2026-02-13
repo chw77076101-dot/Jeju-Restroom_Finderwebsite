@@ -145,6 +145,7 @@
             const [showAll, setShowAll] = useState(false); // Global Toggle
             const [showHelp, setShowHelp] = useState(false); // Help Modal
             const [language, setLanguage] = useState('KR'); // Language State
+            const [isLoading, setIsLoading] = useState(false); // Loading State
 
             const t = (key) => translations[language][key] || translations['KR'][key];
 
@@ -404,6 +405,8 @@
                     return;
                 }
 
+                setIsLoading(true);
+
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         const { latitude, longitude } = position.coords;
@@ -449,10 +452,17 @@
                                 setShowMarkers(false); // Let radius logic handle it
                             }
                         }
+                        setIsLoading(false);
                     },
                     (error) => {
                         console.error(error);
+                        setIsLoading(false);
                         alert("위치 정보를 가져올 수 없습니다. GPS 설정이나 브라우저 권한을 확인해주세요.");
+                    },
+                    {
+                        enableHighAccuracy: true, // Use GPS
+                        timeout: 10000,         // Wait max 10s
+                        maximumAge: 10000       // Use cached position if < 10s old
                     }
                 );
             };
@@ -607,6 +617,31 @@
 
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                    {/* Loading Overlay */}
+                    {isLoading && (
+                        <div style={{
+                            position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                            background: 'rgba(255,255,255,0.7)', zIndex: 99999,
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+                        }}>
+                            <div className="spinner"></div> {/* Use simple CSS spinner or text */}
+                            <p style={{ marginTop: '10px', fontWeight: 'bold', color: '#ff7f00' }}>위치를 찾고 있습니다...</p>
+                            <style>{`
+                                .spinner {
+                                    border: 4px solid #f3f3f3;
+                                    border-top: 4px solid #ff7f00;
+                                    border-radius: 50%;
+                                    width: 40px;
+                                    height: 40px;
+                                    animation: spin 1s linear infinite;
+                                }
+                                @keyframes spin {
+                                    0% { transform: rotate(0deg); }
+                                    100% { transform: rotate(360deg); }
+                                }
+                            `}</style>
+                        </div>
+                    )}
                     <header>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
