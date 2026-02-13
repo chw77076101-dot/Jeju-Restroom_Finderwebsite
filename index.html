@@ -33,6 +33,105 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
+        const translations = {
+            KR: {
+                title: "제주도 전지역 화장실",
+                help: "도움말",
+                olleSelect: "🚶 올레길 선택 (전체 코스)",
+                showAll: "🗺️ 제주 전지역 화장실 보기",
+                searchPlaceholder: "주소 검색 (예: 성산읍)",
+                myLocation: "📍 내 주변 화장실 찾기",
+                nearList: "🚽 가까운 화장실",
+                emergency: "🚨 급해요",
+                addressInfo: "주소 정보 없음",
+                diaper: "기저귀교환대",
+                helpTitle: "🍊 사용 설명서",
+                helpSOS: "🚨 급해요! (SOS)",
+                helpSOSDesc: "화면 우측 하단 빨간 버튼을 누르면, 현재 위치에서 가장 가까운 화장실 5곳을 즉시 찾아줍니다.",
+                helpNear: "📍 내 주변 화장실",
+                helpNearDesc: "'내 주변 화장실 찾기' 버튼을 누르면 반경 1km ~ 10km 내의 화장실을 골라서 볼 수 있습니다.",
+                helpOlle: "🚶 올레길 코스",
+                helpOlleDesc: "상단 메뉴에서 올레길 코스를 선택하면, 해당 코스 주변의 화장실만 필터링됩니다.",
+                helpMap: "🗺️ 길찾기 & 거리",
+                helpMapDesc: "화장실 핀을 클릭하면 직선 거리와 경로(빨간선)가 표시되며, 카카오/네이버/구글 지도로 길안내를 받을 수 있습니다.",
+                helpApp: "📱 꿀팁: 앱처럼 쓰기",
+                helpAppDesc: "브라우저 메뉴에서 '홈 화면에 추가'를 누르면 앱처럼 설치해서 편하게 쓸 수 있어요!",
+                confirm: "확인했어요! 👍"
+            },
+            EN: {
+                title: "Jeju Restroom Finder",
+                help: "Help",
+                olleSelect: "🚶 Select Olle Trail (All)",
+                showAll: "🗺️ Show All Restrooms",
+                searchPlaceholder: "Search Address (e.g. Seongsan)",
+                myLocation: "📍 Find Nearby",
+                nearList: "🚽 Nearby Restrooms",
+                emergency: "🚨 SOS",
+                addressInfo: "No Address Info",
+                diaper: "Diaper Table",
+                helpTitle: "🍊 User Guide",
+                helpSOS: "🚨 Emergency (SOS)",
+                helpSOSDesc: "Tap the red button to find the 5 nearest restrooms immediately.",
+                helpNear: "📍 Nearby Search",
+                helpNearDesc: "Tap 'Find Nearby' to search restrooms within 1km ~ 10km radius.",
+                helpOlle: "🚶 Olle Trails",
+                helpOlleDesc: "Select an Olle Course from the menu to filter restrooms along the trail.",
+                helpMap: "🗺️ Navigation",
+                helpMapDesc: "Click a pin to see distance and route. Supports Kakao/Naver/Google Maps.",
+                helpApp: "📱 Tip: Install App",
+                helpAppDesc: "Add to Home Screen to use this website like a native app!",
+                confirm: "Got it! 👍"
+            },
+            CN: {
+                title: "济州岛洗手间指南",
+                help: "帮助",
+                olleSelect: "🚶 选择偶来小路 (全部)",
+                showAll: "🗺️ 显示所有洗手间",
+                searchPlaceholder: "搜索地址 (例如: 城山)",
+                myLocation: "📍 寻找附近",
+                nearList: "🚽 附近洗手间",
+                emergency: "🚨 紧急",
+                addressInfo: "无地址信息",
+                diaper: "尿布台",
+                helpTitle: "🍊 使用指南",
+                helpSOS: "🚨 紧急模式 (SOS)",
+                helpSOSDesc: "点击红色按钮，立即查找最近的5个洗手间。",
+                helpNear: "📍 附近查找",
+                helpNearDesc: "点击“寻找附近”按钮，可选择1km ~ 10km范围。",
+                helpOlle: "🚶 偶来小路",
+                helpOlleDesc: "选择偶来路线，仅显示路线周边的洗手间。",
+                helpMap: "🗺️ 导航",
+                helpMapDesc: "点击图标显示距离和路径。支持Kakao/Naver/谷歌地图。",
+                helpApp: "📱 提示: 安装应用",
+                helpAppDesc: "添加到主屏幕，可以像APP一样使用！",
+                confirm: "明白了! 👍"
+            },
+            JP: {
+                title: "済州島トイレマップ",
+                help: "ヘルプ",
+                olleSelect: "🚶 オルレコース選択 (全部)",
+                showAll: "🗺️ 全地域のトイレを見る",
+                searchPlaceholder: "住所検索 (例: 城山)",
+                myLocation: "📍 近くのトイレ",
+                nearList: "🚽 近くのトイレ",
+                emergency: "🚨 SOS",
+                addressInfo: "住所情報なし",
+                diaper: "おむつ交換台",
+                helpTitle: "🍊 ユーザーガイド",
+                helpSOS: "🚨 緊急 (SOS)",
+                helpSOSDesc: "右下の赤いボタンを押すと、最も近いトイレ5箇所を即座に探します。",
+                helpNear: "📍 周辺検索",
+                helpNearDesc: "「近くのトイレ」ボタンで半径1km〜10km以内のトイレを探せます。",
+                helpOlle: "🚶 オルレコース",
+                helpOlleDesc: "上部のメニューからコースを選択すると、コース周辺のトイレのみ表示されます。",
+                helpMap: "🗺️ ナビゲーション",
+                helpMapDesc: "ピンをクリックすると距離とルートが表示され、Kakao/Naver/Googleマップで案内を受けられます。",
+                helpApp: "📱 ヒント: アプリとして使う",
+                helpAppDesc: "「ホーム画面に追加」すると、アプリのように便利に使えます！",
+                confirm: "確認しました! 👍"
+            }
+        };
+
         function App() {
             // ... (State same) ...
             const [toilets, setToilets] = useState([]);
@@ -45,6 +144,9 @@
             const [selectedCourse, setSelectedCourse] = useState(null);
             const [showAll, setShowAll] = useState(false); // Global Toggle
             const [showHelp, setShowHelp] = useState(false); // Help Modal
+            const [language, setLanguage] = useState('KR'); // Language State
+
+            const t = (key) => translations[language][key] || translations['KR'][key];
 
             // ... (Rest of state) ...
             const [searchAddress, setSearchAddress] = useState("");
@@ -507,16 +609,26 @@
                     <header>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <h1 style={{ fontSize: '1.2rem', margin: 0 }}>제주도 전지역 화장실 🚽 <span style={{ fontSize: '0.8rem', color: '#888' }}>v1.5</span></h1>
-                                <button onClick={() => setShowHelp(true)} style={{
-                                    background: 'white', border: '1px solid #ccc', fontSize: '1.2rem', cursor: 'pointer',
-                                    borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    boxShadow: '0 2px 5px rgba(0,0,0,0.1)', marginLeft: '10px'
-                                }}>❓</button>
+                                <h1 style={{ fontSize: '1.2rem', margin: 0 }}>{t('title')} 🚽 <span style={{ fontSize: '0.8rem', color: '#888' }}>v2.0</span></h1>
+                                <div style={{ display: 'flex', gap: '5px' }}>
+                                    {['KR', 'EN', 'CN', 'JP'].map(lang => (
+                                        <button key={lang} onClick={() => setLanguage(lang)} style={{
+                                            border: language === lang ? '1px solid #ff7f00' : '1px solid #ddd',
+                                            background: language === lang ? '#ff7f00' : 'white',
+                                            color: language === lang ? 'white' : '#333',
+                                            borderRadius: '5px', padding: '2px 5px', fontSize: '0.7rem', cursor: 'pointer'
+                                        }}>{lang}</button>
+                                    ))}
+                                    <button onClick={() => setShowHelp(true)} style={{
+                                        background: 'white', border: '1px solid #ccc', fontSize: '1.2rem', cursor: 'pointer',
+                                        borderRadius: '50%', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)', marginLeft: '5px'
+                                    }}>❓</button>
+                                </div>
                             </div>
 
                             <select onChange={(e) => handleOlleSelect(e.target.value)} style={{ padding: '5px', borderRadius: '15px', border: '1px solid #ff7f00', outline: 'none', fontSize: '0.9rem' }} value={selectedCourse || ""}>
-                                <option value="">🚶 올레길 선택 (전체 코스)</option>
+                                <option value="">{t('olleSelect')}</option>
                                 {window.OLLE_COURSES && Object.keys(window.OLLE_COURSES).sort((a, b) => {
                                     const numA = parseFloat(a);
                                     const numB = parseFloat(b);
@@ -547,15 +659,15 @@
                                     }}
                                     style={{ width: '18px', height: '18px' }}
                                 />
-                                🗺️ 제주 전지역 화장실 보기
+                                {t('showAll')}
                             </label>
 
                             {/* Address Search Bar */}
                             <div style={{ display: 'flex', gap: '5px', width: '100%' }}>
                                 <input
                                     type="text"
-                                    placeholder="주소 검색 (예: 성산읍)"
-                                    value={searchAddress}
+                                    placeholder={t('searchPlaceholder')}
+                                    {...{ value: searchAddress }}
                                     onChange={(e) => setSearchAddress(e.target.value)}
                                     onKeyPress={(e) => e.key === 'Enter' && handleSearchAddress()}
                                     style={{ flex: 1, padding: '8px', borderRadius: '15px', border: '1px solid #ddd', fontSize: '0.9rem' }}
@@ -572,10 +684,10 @@
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px'
                                 }}
                             >
-                                📍 내 주변 화장실 찾기
+                                {t('myLocation')}
                             </button>
 
-                            {/* Radius Buttons (Visible only when searching or My Location) */}
+                            {/* Radius Buttons */}
                             {searchCenter && (
                                 <div style={{ display: 'flex', gap: '5px', justifyContent: 'center' }}>
                                     {[1, 3, 5, 10].map(km => (
@@ -605,7 +717,7 @@
                         {/* Nearest List Overlay */}
                         <div className={`restroom-list-container ${isListVisible ? 'active' : ''}`}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                                <h3 style={{ margin: 0 }}>🚽 가까운 화장실</h3>
+                                <h3 style={{ margin: 0 }}>{t('nearList')}</h3>
                                 <button onClick={() => setIsListVisible(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>×</button>
                             </div>
                             {nearestList.map((toilet) => (
@@ -616,10 +728,10 @@
                                             {toilet.dist < 1 ? `${(toilet.dist * 1000).toFixed(0)}m` : `${toilet.dist.toFixed(1)}km`}
                                         </span>
                                     </div>
-                                    <p className="restroom-address">{toilet.address || "주소 정보 없음"}</p>
+                                    <p className="restroom-address">{toilet.address || t('addressInfo')}</p>
                                     <div className="restroom-meta">
                                         {toilet.type === 'Public' ? <span className="tag">Public</span> : <span className="tag">Tourist</span>}
-                                        {toilet.diaperTable && <span className="tag">기저귀교환대</span>}
+                                        {toilet.diaperTable && <span className="tag">{t('diaper')}</span>}
                                     </div>
                                 </div>
                             ))}
@@ -641,7 +753,7 @@
                             }}
                         >
                             <span style={{ fontSize: '1.5rem', marginBottom: '2px' }}>🚨</span>
-                            <span style={{ fontSize: '0.8rem' }}>급해요</span>
+                            <span style={{ fontSize: '0.8rem' }}>{t('emergency')}</span>
                         </button>
                     </div>
 
@@ -650,38 +762,38 @@
                         <div style={{
                             position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
                             background: 'rgba(0,0,0,0.6)', zIndex: 10000, display: 'flex',
-                            justifyContent: 'center', alignItems: 'center', padding: '20px'
+                            justifyContent: 'center', alignItems: 'center', padding: '10px'
                         }} onClick={() => setShowHelp(false)}>
                             <div style={{
-                                background: 'white', padding: '20px', borderRadius: '15px',
-                                maxWidth: '400px', width: '100%', boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
-                                overflowY: 'auto', maxHeight: '80vh'
+                                background: 'white', padding: '15px', borderRadius: '15px',
+                                maxWidth: '340px', width: '90%', boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+                                overflowY: 'auto', maxHeight: '85vh', boxSizing: 'border-box'
                             }} onClick={(e) => e.stopPropagation()}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-                                    <h2 style={{ margin: 0, color: '#ff7f00' }}>🍊 사용 설명서</h2>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                    <h2 style={{ margin: 0, color: '#ff7f00' }}>{t('helpTitle')}</h2>
                                     <button onClick={() => setShowHelp(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
                                 </div>
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontSize: '0.95rem', lineHeight: '1.5' }}>
                                     <div>
-                                        <strong>🚨 급해요! (SOS)</strong>
-                                        <p style={{ margin: '5px 0 0', color: '#555' }}>화면 우측 하단 빨간 버튼을 누르면, 현재 위치에서 <strong>가장 가까운 화장실 5곳</strong>을 즉시 찾아줍니다.</p>
+                                        <strong>{t('helpSOS')}</strong>
+                                        <p style={{ margin: '5px 0 0', color: '#555' }}>{t('helpSOSDesc')}</p>
                                     </div>
                                     <div>
-                                        <strong>📍 내 주변 화장실</strong>
-                                        <p style={{ margin: '5px 0 0', color: '#555' }}>'내 주변 화장실 찾기' 버튼을 누르면 반경 <strong>1km ~ 10km</strong> 내의 화장실을 골라서 볼 수 있습니다.</p>
+                                        <strong>{t('helpNear')}</strong>
+                                        <p style={{ margin: '5px 0 0', color: '#555' }}>{t('helpNearDesc')}</p>
                                     </div>
                                     <div>
-                                        <strong>🚶 올레길 코스</strong>
-                                        <p style={{ margin: '5px 0 0', color: '#555' }}>상단 메뉴에서 올레길 코스를 선택하면, 해당 코스 주변의 화장실만 필터링됩니다.</p>
+                                        <strong>{t('helpOlle')}</strong>
+                                        <p style={{ margin: '5px 0 0', color: '#555' }}>{t('helpOlleDesc')}</p>
                                     </div>
                                     <div>
-                                        <strong>🗺️ 길찾기 & 거리</strong>
-                                        <p style={{ margin: '5px 0 0', color: '#555' }}>화장실 핀을 클릭하면 <strong>직선 거리와 경로(빨간선)</strong>가 표시되며, 카카오/네이버/구글 지도로 길안내를 받을 수 있습니다.</p>
+                                        <strong>{t('helpMap')}</strong>
+                                        <p style={{ margin: '5px 0 0', color: '#555' }}>{t('helpMapDesc')}</p>
                                     </div>
                                     <div style={{ background: '#fff3cd', padding: '10px', borderRadius: '8px' }}>
-                                        <strong>📱 꿀팁: 앱처럼 쓰기</strong>
-                                        <p style={{ margin: '5px 0 0', fontSize: '0.9rem' }}>브라우저 메뉴에서 <strong>'홈 화면에 추가'</strong>를 누르면 앱처럼 설치해서 편하게 쓸 수 있어요!</p>
+                                        <strong>{t('helpApp')}</strong>
+                                        <p style={{ margin: '5px 0 0', fontSize: '0.9rem' }}>{t('helpAppDesc')}</p>
                                     </div>
                                 </div>
 
@@ -690,7 +802,7 @@
                                     background: '#ff7f00', color: 'white', border: 'none',
                                     borderRadius: '10px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer'
                                 }}>
-                                    확인했어요! 👍
+                                    {t('confirm')}
                                 </button>
                             </div>
                         </div>
