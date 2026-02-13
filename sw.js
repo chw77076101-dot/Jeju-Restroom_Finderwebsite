@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jeju-restroom-v5';
+const CACHE_NAME = 'jeju-restroom-v6';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
