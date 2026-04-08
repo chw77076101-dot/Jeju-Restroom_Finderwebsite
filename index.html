@@ -17,7 +17,7 @@
     <!-- Scripts -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <!-- Kakao Maps Script -->
     <script type="text/javascript"
@@ -299,7 +299,7 @@
                 setSelectedCourse(id);
                 setShowAll(false);
                 setSearchCenter(null);
-                if (ollePolylineRef?.current) ollePolylineRef.current.setMap(null);
+                if (ollePolylineRef.current) ollePolylineRef.current.setMap(null);
                 
                 const path = course.path.map(p => new kakao.maps.LatLng(p.lat, p.lng));
                 const poly = new kakao.maps.Polyline({
