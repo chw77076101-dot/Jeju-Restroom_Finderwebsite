@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jeju-restroom-v9';
+const CACHE_NAME = 'jeju-restroom-v11';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -6,8 +6,8 @@ const ASSETS_TO_CACHE = [
     './jeju_olle_data.js',
     './toilets.json',
     './pwa_icon_512.png',
-    'https://unpkg.com/react@18/umd/react.development.js',
-    'https://unpkg.com/react-dom@18/umd/react-dom.development.js',
+    'https://unpkg.com/react@18/umd/react.production.min.js',
+    'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
     'https://unpkg.com/babel-standalone@6/babel.min.js'
 ];
 

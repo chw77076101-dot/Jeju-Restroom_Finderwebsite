@@ -1,204 +1,354 @@
 :root {
-  /* Jeju Orange */
-  --primary-color: #ff7f00;
-  --secondary-color: #6c757d;
-  --bg-color: #f8f9fa;
-  --text-color: #333;
+  /* Jeju Orange Design System */
+  --primary: hsl(28, 100%, 50%);
+  --primary-hover: hsl(28, 100%, 45%);
+  --primary-soft: hsla(28, 100%, 50%, 0.1);
+  
+  --secondary: hsl(210, 10%, 45%);
+  --success: hsl(145, 63%, 42%);
+  --danger: hsl(0, 72%, 51%);
+  --warning: hsl(45, 100%, 51%);
+  
+  --bg-main: hsl(210, 20%, 98%);
+  --bg-card: hsla(0, 0%, 100%, 0.75);
+  --bg-glass: hsla(0, 0%, 100%, 0.85);
+  
+  --text-main: hsl(210, 30%, 15%);
+  --text-muted: hsl(210, 10%, 45%);
+  --text-light: hsl(0, 0%, 100%);
+  
+  --border: hsla(210, 20%, 80%, 0.5);
+  --shadow-sm: 0 2px 8px hsla(0, 0%, 0%, 0.05);
+  --shadow-md: 0 8px 24px hsla(0, 0%, 0%, 0.08);
+  --shadow-lg: 0 16px 48px hsla(0, 0%, 0%, 0.12);
+  
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+  
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-color);
+  padding: 0;
+  font-family: 'Outfit', 'Inter', -apple-system, system-ui, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
 }
 
 #root {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  /* Full viewport height */
+  height: 100%;
 }
 
-/* Header */
+/* Glassmorphism Header */
 header {
-  background: white;
-  padding: 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--border);
   z-index: 1000;
+  box-shadow: var(--shadow-sm);
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 h1 {
   margin: 0;
-  font-size: 1.25rem;
-  color: #333;
+  font-size: 1.4rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--primary), #ffb347);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 /* Map Container */
 .map-container {
   flex: 1;
-  /* Takes remaining space */
-  width: 100%;
   position: relative;
+  background: #e5e5e5;
 }
 
-/* Leaflet map needs explicitly defined height if flex doesn't work perfectly in all browsers, 
-   but with flex:1 on parent it should work if html,body,#root are 100%. 
-   We set it explicitly just in case for the container div. */
 #map {
   height: 100%;
   width: 100%;
 }
 
-/* Floating Action Button */
-.find-btn {
-  position: absolute;
-  bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-  /* Above map */
-  background-color: var(--primary-color);
+/* UI Elements - Premium Styling */
+button, select, input {
+  font-family: inherit;
+  outline: none;
+}
+
+.btn-premium {
+  background: var(--primary);
   color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 50px;
-  font-size: 1rem;
-  font-weight: bold;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s, background-color 0.2s;
+  transition: var(--transition);
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px hsla(28, 100%, 50%, 0.3);
 }
 
-.find-btn:hover {
-  background-color: #0056b3;
-  transform: translateX(-50%) scale(1.05);
+.btn-premium:hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px hsla(28, 100%, 50%, 0.4);
 }
 
-.find-btn:active {
-  transform: translateX(-50%) scale(0.95);
+.btn-premium:active {
+  transform: translateY(0);
 }
 
-/* Popup Styles */
-.leaflet-popup-content-wrapper {
-  border-radius: 8px;
-}
-
-.popup-content h3 {
-  margin: 0 0 5px 0;
-  font-size: 1.1rem;
-}
-
-.popup-content p {
-  margin: 5px 0;
-  font-size: 0.9rem;
-  color: #555;
-}
-
-.tag {
-  display: inline-block;
-  background: #e9ecef;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  margin-right: 4px;
-  margin-top: 5px;
-}
-
-/* Restroom List Styles */
+/* List Container - Glassmorphism */
 .restroom-list-container {
   position: absolute;
-  bottom: 80px;
-  /* Above the button */
+  bottom: 1.5rem;
   left: 50%;
-  transform: translateX(-50%);
-  width: 90%;
-  max-width: 400px;
-  max-height: 40vh;
-  overflow-y: auto;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translate(-50%, 20px);
+  width: calc(100% - 2rem);
+  max-width: 480px;
+  max-height: 50vh;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   z-index: 999;
-  padding: 10px;
-  display: none;
-  /* Hidden by default until active */
+  padding: 1.25rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: var(--transition);
+  overflow-y: auto;
 }
 
 .restroom-list-container.active {
-  display: block;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
 }
 
 .restroom-item {
-  padding: 12px;
-  border-bottom: 1px solid #eee;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 0.75rem;
+  background: hsla(0, 0%, 100%, 0.4);
+  border: 1px solid transparent;
+  transition: var(--transition);
   cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.restroom-item:last-child {
-  border-bottom: none;
 }
 
 .restroom-item:hover {
-  background-color: #f8f9fa;
-}
-
-.restroom-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
+  background: white;
+  border-color: var(--primary);
+  box-shadow: var(--shadow-sm);
+  transform: translateX(4px);
 }
 
 .restroom-name {
-  font-weight: bold;
-  font-size: 1rem;
-  color: #333;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-main);
+  margin-right: 0.5rem;
 }
 
 .restroom-dist {
-  background-color: #e7f5ff;
-  color: #007bff;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  background: var(--primary-soft);
+  color: var(--primary);
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
 .restroom-address {
   font-size: 0.85rem;
-  color: #666;
-  margin: 0;
-  line-height: 1.4;
+  color: var(--text-muted);
+  margin: 0.4rem 0;
 }
 
-.restroom-meta {
+.tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  background: hsl(210, 20%, 90%);
+  color: var(--secondary);
+}
+
+.tag.premium {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+/* SOS Button - Modern Pulse */
+.sos-button {
+  position: absolute;
+  bottom: 2rem;
+  right: 1.5rem;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-full);
+  background: var(--danger);
+  color: white;
+  border: none;
   display: flex;
-  gap: 5px;
-  margin-top: 6px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1001;
+  box-shadow: 0 8px 24px hsla(0, 100%, 50%, 0.4);
+  transition: var(--transition);
 }
 
-/* Pulse Animation for SOS Button */
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
-  }
-
-  70% {
-    transform: scale(1.1);
-    box-shadow: 0 0 0 15px rgba(255, 0, 0, 0);
-  }
-
-  100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
-  }
+.sos-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 12px 32px hsla(0, 100%, 50%, 0.5);
 }
+
+.sos-button .sos-icon {
+  font-size: 1.6rem;
+  margin-bottom: 2px;
+}
+
+.sos-button .sos-text {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsla(210, 10%, 80%, 0.5);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Pulse for SOS */
+.pulse-glow {
+  position: relative;
+}
+
+.pulse-glow::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: inherit;
+  background: inherit;
+  z-index: -1;
+  animation: pulse-animation 2s infinite;
+}
+
+@keyframes pulse-animation {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+/* Filter Section */
+.filter-container {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0;
+}
+
+.filter-badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  color: var(--text-muted);
+}
+
+.filter-badge.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Modal / InfoWindow */
+.popup-content {
+  padding: 12px;
+  min-width: 240px;
+}
+
+.popup-title {
+  color: var(--primary);
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.nav-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.nav-link {
+  text-align: center;
+  padding: 6px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 0.75rem;
+  font-weight: 700;
+  transition: var(--transition);
+}
+
+.nav-kakao { background: #fee500; color: #3c1e1e; }
+.nav-naver { background: #03c75a; color: white; }
+.nav-google { background: #4285f4; color: white; }
+
+.nav-link:hover { opacity: 0.9; transform: translateY(-1px); }

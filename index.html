@@ -1,10 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>제주도 전지역 화장실</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>제주도 전지역 화장실 - Premium</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
 
     <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
@@ -14,9 +19,9 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 
-    <!-- Kakao Maps Script with User's Key -->
+    <!-- Kakao Maps Script -->
     <script type="text/javascript"
-        src="//dapi.kakao.com/v2/maps/sdk.js?appkey=168a004f088bbd9ddde4d63fd5d0b054&libraries=services"></script>
+        src="//dapi.kakao.com/v2/maps/sdk.js?appkey=168a004f088bbd9ddde4d63fd5d0b054&libraries=services&autoload=false"></script>
 
     <!-- Data -->
     <script src="jeju_olle_data.js"></script>
@@ -31,128 +36,63 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useRef, useMemo } = React;
 
         const translations = {
             KR: {
-                title: "제주도 전지역 화장실",
-                help: "도움말",
-                olleSelect: "🚶 올레길 선택 (전체 코스)",
-                showAll: "🗺️ 제주 전지역 화장실 보기",
-                searchPlaceholder: "주소 검색 (예: 성산읍)",
-                myLocation: "📍 내 주변 화장실 찾기",
+                title: "제주 화장실 찾기",
+                help: "가이드",
+                olleSelect: "🚶 올레길 코스 선택",
+                showAll: "🗺️ 전지역 보기",
+                searchPlaceholder: "지역/주소 검색 (예: 성산읍)",
+                myLocation: "📍 내 주변 찾기",
                 nearList: "🚽 가까운 화장실",
                 emergency: "🚨 급해요",
                 addressInfo: "주소 정보 없음",
-                diaper: "기저귀교환대",
-                helpTitle: "🍊 사용 설명서",
-                helpSOS: "🚨 급해요! (SOS)",
-                helpSOSDesc: "화면 우측 하단 빨간 버튼을 누르면, 현재 위치에서 가장 가까운 화장실 5곳을 즉시 찾아줍니다.",
-                helpNear: "📍 내 주변 화장실",
-                helpNearDesc: "'내 주변 화장실 찾기' 버튼을 누르면 반경 1km ~ 10km 내의 화장실을 골라서 볼 수 있습니다.",
-                helpOlle: "🚶 올레길 코스",
-                helpOlleDesc: "상단 메뉴에서 올레길 코스를 선택하면, 해당 코스 주변의 화장실만 필터링됩니다.",
-                helpMap: "🗺️ 길찾기 & 거리",
-                helpMapDesc: "화장실 핀을 클릭하면 직선 거리와 경로(빨간선)가 표시되며, 카카오/네이버/구글 지도로 길안내를 받을 수 있습니다.",
-                helpApp: "📱 꿀팁: 앱처럼 쓰기",
-                helpAppDesc: "브라우저 메뉴에서 '홈 화면에 추가'를 누르면 앱처럼 설치해서 편하게 쓸 수 있어요!",
-                confirm: "확인했어요! 👍"
+                diaper: "기저귀 교환",
+                unisex: "공용",
+                open24h: "24시",
+                confirm: "확인"
             },
             EN: {
-                title: "Jeju Restroom Finder",
-                help: "Help",
-                olleSelect: "🚶 Select Olle Trail (All)",
-                showAll: "🗺️ Show All Restrooms",
-                searchPlaceholder: "Search Address (e.g. Seongsan)",
+                title: "Jeju Restroom",
+                help: "Guide",
+                olleSelect: "🚶 Olle Trail Courses",
+                showAll: "🗺️ Show All",
+                searchPlaceholder: "Search area (e.g. Seongsan)",
                 myLocation: "📍 Find Nearby",
                 nearList: "🚽 Nearby Restrooms",
                 emergency: "🚨 SOS",
                 addressInfo: "No Address Info",
-                diaper: "Diaper Table",
-                helpTitle: "🍊 User Guide",
-                helpSOS: "🚨 Emergency (SOS)",
-                helpSOSDesc: "Tap the red button to find the 5 nearest restrooms immediately.",
-                helpNear: "📍 Nearby Search",
-                helpNearDesc: "Tap 'Find Nearby' to search restrooms within 1km ~ 10km radius.",
-                helpOlle: "🚶 Olle Trails",
-                helpOlleDesc: "Select an Olle Course from the menu to filter restrooms along the trail.",
-                helpMap: "🗺️ Navigation",
-                helpMapDesc: "Click a pin to see distance and route. Supports Kakao/Naver/Google Maps.",
-                helpApp: "📱 Tip: Install App",
-                helpAppDesc: "Add to Home Screen to use this website like a native app!",
-                confirm: "Got it! 👍"
-            },
-            CN: {
-                title: "济州岛洗手间指南",
-                help: "帮助",
-                olleSelect: "🚶 选择偶来小路 (全部)",
-                showAll: "🗺️ 显示所有洗手间",
-                searchPlaceholder: "搜索地址 (例如: 城山)",
-                myLocation: "📍 寻找附近",
-                nearList: "🚽 附近洗手间",
-                emergency: "🚨 紧急",
-                addressInfo: "无地址信息",
-                diaper: "尿布台",
-                helpTitle: "🍊 使用指南",
-                helpSOS: "🚨 紧急模式 (SOS)",
-                helpSOSDesc: "点击红色按钮，立即查找最近的5个洗手间。",
-                helpNear: "📍 附近查找",
-                helpNearDesc: "点击“寻找附近”按钮，可选择1km ~ 10km范围。",
-                helpOlle: "🚶 偶来小路",
-                helpOlleDesc: "选择偶来路线，仅显示路线周边的洗手间。",
-                helpMap: "🗺️ 导航",
-                helpMapDesc: "点击图标显示距离和路径。支持Kakao/Naver/谷歌地图。",
-                helpApp: "📱 提示: 安装应用",
-                helpAppDesc: "添加到主屏幕，可以像APP一样使用！",
-                confirm: "明白了! 👍"
-            },
-            JP: {
-                title: "済州島トイレマップ",
-                help: "ヘルプ",
-                olleSelect: "🚶 オルレコース選択 (全部)",
-                showAll: "🗺️ 全地域のトイレを見る",
-                searchPlaceholder: "住所検索 (例: 城山)",
-                myLocation: "📍 近くのトイレ",
-                nearList: "🚽 近くのトイレ",
-                emergency: "🚨 SOS",
-                addressInfo: "住所情報なし",
-                diaper: "おむつ交換台",
-                helpTitle: "🍊 ユーザーガイド",
-                helpSOS: "🚨 緊急 (SOS)",
-                helpSOSDesc: "右下の赤いボタンを押すと、最も近いトイレ5箇所を即座に探します。",
-                helpNear: "📍 周辺検索",
-                helpNearDesc: "「近くのトイレ」ボタンで半径1km〜10km以内のトイレを探せます。",
-                helpOlle: "🚶 オルレコース",
-                helpOlleDesc: "上部のメニューからコースを選択すると、コース周辺のトイレのみ表示されます。",
-                helpMap: "🗺️ ナビゲーション",
-                helpMapDesc: "ピンをクリックすると距離とルートが表示され、Kakao/Naver/Googleマップで案内を受けられます。",
-                helpApp: "📱 ヒント: アプリとして使う",
-                helpAppDesc: "「ホーム画面に追加」すると、アプリのように便利に使えます！",
-                confirm: "確認しました! 👍"
+                diaper: "Diaper",
+                unisex: "Unisex",
+                open24h: "24H",
+                confirm: "OK"
             }
         };
 
         function App() {
-            // ... (State same) ...
             const [toilets, setToilets] = useState([]);
             const [userLocation, setUserLocation] = useState(null);
             const [mapInstance, setMapInstance] = useState(null);
             const [nearestList, setNearestList] = useState([]);
             const [isListVisible, setIsListVisible] = useState(false);
-            const [showMarkers, setShowMarkers] = useState(false); // Default false
+            const [showMarkers, setShowMarkers] = useState(false);
             const [isEmergency, setIsEmergency] = useState(false);
             const [selectedCourse, setSelectedCourse] = useState(null);
-            const [showAll, setShowAll] = useState(false); // Global Toggle
-            const [showHelp, setShowHelp] = useState(false); // Help Modal
-            const [language, setLanguage] = useState('KR'); // Language State
-            const [isLoading, setIsLoading] = useState(false); // Loading State
+            const [showAll, setShowAll] = useState(false);
+            const [language, setLanguage] = useState('KR');
+            const [isLoading, setIsLoading] = useState(false);
+            
+            // Feature Filters
+            const [featureFilters, setFeatureFilters] = useState({
+                diaper: false,
+                open24h: false
+            });
 
-            const t = (key) => translations[language][key] || translations['KR'][key];
-
-            // ... (Rest of state) ...
             const [searchAddress, setSearchAddress] = useState("");
-            const [searchRadius, setSearchRadius] = useState(0); // 0 = off, 1, 3, 5 km
-            const [searchCenter, setSearchCenter] = useState(null); // LatLng of searched address
+            const [searchRadius, setSearchRadius] = useState(0); 
+            const [searchCenter, setSearchCenter] = useState(null);
 
             const mapRef = useRef(null);
             const markersRef = useRef({});
@@ -163,29 +103,25 @@
             const radiusCircleRef = useRef(null);
             const searchMarkerRef = useRef(null);
 
-            // Haversine Formula
+            const t = (key) => translations[language][key] || translations['KR'][key];
+
+            // Distance Utility
             const getDistance = (lat1, lon1, lat2, lon2) => {
                 const R = 6371;
-                const dLat = deg2rad(lat2 - lat1);
-                const dLon = deg2rad(lon2 - lon1);
-                const a =
-                    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLon = (lon2 - lon1) * Math.PI / 180;
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
                     Math.sin(dLon / 2) * Math.sin(dLon / 2);
                 const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
                 return R * c;
             };
 
-            const deg2rad = (deg) => {
-                return deg * (Math.PI / 180);
-            };
-
-            // 1. Fetch Data
+            // 1. Fetch & Init
             useEffect(() => {
                 fetch('toilets.json')
                     .then(res => res.json())
                     .then(data => {
-                        // Filter for Jeju only (approx Lat 32-34, Lng 126-127) and valid coords
                         const jejuToilets = data.filter(t =>
                             t.lat > 32 && t.lat < 35 &&
                             t.lng > 125 && t.lng < 128 &&
@@ -193,726 +129,286 @@
                         );
                         setToilets(jejuToilets);
                     })
-                    .catch(err => console.error("Failed to load data:", err));
+                    .catch(err => console.error("Data error:", err));
+
+                if (window.kakao && window.kakao.maps) {
+                    kakao.maps.load(() => {
+                        const container = mapRef.current;
+                        const options = {
+                            center: new kakao.maps.LatLng(33.450701, 126.570667),
+                            level: 9
+                        };
+                        const map = new kakao.maps.Map(container, options);
+                        setMapInstance(map);
+                    });
+                }
             }, []);
 
-            // Helper to get review stats from LocalStorage
-            const getReviewStats = (toiletId) => {
-                const storage = JSON.parse(localStorage.getItem('jeju_reviews') || '{}');
-                return storage[toiletId] || { good: 0, bad: 0, userAction: null };
-            };
+            // 2. Filtered Toilets
+            const filteredToilets = useMemo(() => {
+                let result = [...toilets];
 
-            // 2. Initialize Map
-            useEffect(() => {
-                if (!mapRef.current) return;
+                // Apply Feature Filters
+                if (featureFilters.diaper) result = result.filter(t => t.diaperTable);
+                if (featureFilters.open24h) result = result.filter(t => t.openTime === '상시');
 
-                // Check if Kakao is loaded
-                if (!window.kakao || !window.kakao.maps) {
-                    return;
+                // Apply Mode Filters
+                if (isEmergency && nearestList.length > 0) {
+                    return nearestList.filter(t => result.find(rt => rt.id === t.id));
+                } else if (showAll) {
+                    return result;
+                } else if (selectedCourse && window.OLLE_COURSES) {
+                    const coursePath = window.OLLE_COURSES[selectedCourse].path;
+                    return result.filter(t => coursePath.some(pt => getDistance(t.lat, t.lng, pt.lat, pt.lng) < 1.5));
+                } else if (searchCenter && searchRadius > 0) {
+                    const cLat = searchCenter.getLat();
+                    const cLng = searchCenter.getLng();
+                    return result.filter(t => getDistance(cLat, cLng, t.lat, t.lng) <= searchRadius);
                 }
-
-                kakao.maps.load(() => {
-                    const container = mapRef.current;
-                    const options = {
-                        center: new kakao.maps.LatLng(33.450701, 126.570667), // Default Center
-                        level: 9
-                    };
-                    const map = new kakao.maps.Map(container, options);
-                    setMapInstance(map);
-                });
-            }, []); // Run once on mount
+                
+                return showMarkers ? result : [];
+            }, [toilets, featureFilters, isEmergency, nearestList, showAll, selectedCourse, searchCenter, searchRadius, showMarkers]);
 
             // 3. Render Markers
             useEffect(() => {
-                if (!mapInstance || toilets.length === 0) return;
+                if (!mapInstance) return;
 
-                // Determine which toilets to show
-                let targetToilets = [];
-
-                if (isEmergency && nearestList.length > 0) {
-                    targetToilets = nearestList;
-                } else if (showAll) {
-                    targetToilets = toilets;
-                } else if (selectedCourse) {
-                    if (window.OLLE_COURSES && window.OLLE_COURSES[selectedCourse]) {
-                        const coursePath = window.OLLE_COURSES[selectedCourse].path;
-                        targetToilets = toilets.filter(t => {
-                            return coursePath.some(pt => getDistance(t.lat, t.lng, pt.lat, pt.lng) < 2.0);
-                        });
-                    }
-                } else if (searchCenter && searchRadius > 0) {
-                    const centerLat = searchCenter.getLat();
-                    const centerLng = searchCenter.getLng();
-                    targetToilets = toilets.filter(t => getDistance(centerLat, centerLng, t.lat, t.lng) <= searchRadius);
-                } else if (showMarkers) {
-                    targetToilets = toilets;
-                } else {
-                    targetToilets = [];
-                }
-
-                // Remove markers not in target
+                // Clear unused
+                const activeIds = filteredToilets.map(t => String(t.id));
                 Object.keys(markersRef.current).forEach(id => {
-                    if (!targetToilets.find(t => t.id == id)) {
+                    if (!activeIds.includes(id)) {
                         markersRef.current[id].setMap(null);
                         delete markersRef.current[id];
+                        if(infoWindowsRef.current[id]) infoWindowsRef.current[id].close();
                     }
                 });
 
-                // Add/Update markers
-                targetToilets.forEach(toilet => {
+                // Add new
+                filteredToilets.forEach(toilet => {
                     if (markersRef.current[toilet.id]) return;
 
-                    const position = new kakao.maps.LatLng(toilet.lat, toilet.lng);
+                    const pos = new kakao.maps.LatLng(toilet.lat, toilet.lng);
                     const marker = new kakao.maps.Marker({
-                        position: position,
+                        position: pos,
                         map: mapInstance,
                         title: toilet.name
                     });
 
-                    const stats = getReviewStats(toilet.id);
-                    const kakaoNaviUrl = `https://map.kakao.com/link/to/${toilet.name},${toilet.lat},${toilet.lng}`;
-                    const googleMapUrl = `https://www.google.com/maps/dir/?api=1&destination=${toilet.lat},${toilet.lng}`;
-
-                    const contentString = `
-                        <div class="popup-content" style="padding:10px; min-width:220px; background:white; border-radius:10px; border:1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-                            <h3 style="margin:0 0 5px; color:#ff7f00;">${toilet.name}</h3>
-                            <p style="margin:5px 0; font-size:13px; color:#666;">${toilet.address}</p>
-                            
-                            <div style="display:flex; gap:5px; margin: 8px 0;">
-                                <a href="${kakaoNaviUrl}" target="_blank" style="flex:1; text-align:center; background:#FAE100; color:#3C1E1E; padding:5px; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">Kakao</a>
-                                <a href="#" onclick="window.openNaverMap(${toilet.lat}, ${toilet.lng}, '${toilet.name}'); return false;" style="flex:1; text-align:center; background:#03C75A; color:white; padding:5px; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">Naver</a>
-                                <a href="${googleMapUrl}" target="_blank" style="flex:1; text-align:center; background:#4285F4; color:white; padding:5px; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">Google</a>
-                            </div>
-
-                            <div style="margin-top:8px; border-top:1px solid #eee; padding-top:8px;" id="review-box-${toilet.id}">
-                                <div style="display:flex; gap:5px; align-items:center;">
-                                    <button onclick="window.handleReview(${toilet.id}, 'good')" style="border:1px solid #ddd; background:${stats.userAction === 'good' ? '#e7f5ff' : 'white'}; color:${stats.userAction === 'good' ? '#007bff' : 'black'}; border-radius:12px; padding:4px 8px; cursor:pointer; font-size:12px;">👍 ${stats.good}</button>
-                                    <button onclick="window.handleReview(${toilet.id}, 'bad')" style="border:1px solid #ddd; background:${stats.userAction === 'bad' ? '#ffe3e3' : 'white'}; color:${stats.userAction === 'bad' ? '#dc3545' : 'black'}; border-radius:12px; padding:4px 8px; cursor:pointer; font-size:12px;">👎 ${stats.bad}</button>
-                                </div>
+                    const content = `
+                        <div class="popup-content">
+                            <h3 class="popup-title">${toilet.name}</h3>
+                            <p style="font-size:12px; color:#666; margin:0;">${toilet.address}</p>
+                            <div class="nav-buttons">
+                                <a href="https://map.kakao.com/link/to/${toilet.name},${toilet.lat},${toilet.lng}" target="_blank" class="nav-link nav-kakao">Kakao</a>
+                                <a href="https://map.naver.com/v5/directions/-/,,${toilet.lat},${toilet.lng},${toilet.name}/" target="_blank" class="nav-link nav-naver">Naver</a>
+                                <a href="https://www.google.com/maps/dir/?api=1&destination=${toilet.lat},${toilet.lng}" target="_blank" class="nav-link nav-google">Google</a>
                             </div>
                         </div>
                     `;
 
-                    const infoWindow = new kakao.maps.InfoWindow({
-                        content: contentString,
-                        removable: true
-                    });
-
-                    // Add Listener
-                    kakao.maps.event.addListener(marker, 'click', function () {
-                        Object.values(infoWindowsRef.current).forEach(iw => iw.close());
-
-                        // 1. Draw Red Line (Dynamic)
-                        if (userLocation) {
-                            if (routeLineRef.current) {
-                                routeLineRef.current.setMap(null);
-                            }
-                            const line = new kakao.maps.Polyline({
-                                map: mapInstance,
-                                path: [userLocation, new kakao.maps.LatLng(toilet.lat, toilet.lng)],
-                                strokeWeight: 6,
-                                strokeWeight: 6,
-                                strokeColor: '#FF0000',
-                                strokeOpacity: 0.8,
-                                strokeStyle: 'solid'
-                            });
-                            routeLineRef.current = line;
-                        }
-
-                        // 2. Refresh review stats & Add Distance
-                        const currentStats = getReviewStats(toilet.id);
-                        let distanceHtml = '';
-
-                        if (userLocation) {
-                            const distKm = getDistance(userLocation.getLat(), userLocation.getLng(), toilet.lat, toilet.lng);
-                            const distStr = distKm < 1 ? `${(distKm * 1000).toFixed(0)}m` : `${distKm.toFixed(1)}km`;
-                            distanceHtml = `<span style="color:#ff7f00; font-size:0.8rem; margin-left:5px;">(📏 ${distStr})</span>`;
-                        }
-
-                        const updatedContent = contentString
-                            .replace(`👍 ${stats.good}`, `👍 ${currentStats.good}`)
-                            .replace(`👎 ${stats.bad}`, `👎 ${currentStats.bad}`)
-                            .replace(`background:${stats.userAction === 'good' ? '#e7f5ff' : 'white'}`, `background:${currentStats.userAction === 'good' ? '#e7f5ff' : 'white'}`)
-                            .replace(`color:${stats.userAction === 'good' ? '#007bff' : 'black'}`, `color:${currentStats.userAction === 'good' ? '#007bff' : 'black'}`)
-                            .replace(`</h3>`, `${distanceHtml}</h3>`);
-
-                        infoWindow.setContent(updatedContent);
-                        infoWindow.open(mapInstance, marker);
-                        mapInstance.panTo(marker.getPosition());
+                    const iw = new kakao.maps.InfoWindow({ content, removable: true });
+                    
+                    kakao.maps.event.addListener(marker, 'click', () => {
+                        Object.values(infoWindowsRef.current).forEach(w => w.close());
+                        iw.open(mapInstance, marker);
+                        mapInstance.panTo(pos);
+                        drawRouteLine(pos);
                     });
 
                     markersRef.current[toilet.id] = marker;
-                    infoWindowsRef.current[toilet.id] = infoWindow;
+                    infoWindowsRef.current[toilet.id] = iw;
                 });
-            }, [mapInstance, toilets, showMarkers, selectedCourse, searchCenter, searchRadius, showAll, isEmergency, nearestList, userLocation]);
+            }, [mapInstance, filteredToilets]);
 
-            // ... (Find Nearest Logic same) ...
-            const findNearest = (lat, lng, limit) => {
-                if (toilets.length === 0) return;
-
-                Object.values(infoWindowsRef.current).forEach(iw => iw.close());
-
-                if (routeLineRef.current) {
-                    routeLineRef.current.setMap(null);
-                    routeLineRef.current = null;
-                }
-
-                const toiletsWithDist = toilets.map(t => {
-                    const distKm = getDistance(lat, lng, t.lat, t.lng);
-                    return { ...t, dist: distKm };
+            const drawRouteLine = (targetPos) => {
+                if (!userLocation || !mapInstance) return;
+                if (routeLineRef.current) routeLineRef.current.setMap(null);
+                
+                const line = new kakao.maps.Polyline({
+                    map: mapInstance,
+                    path: [userLocation, targetPos],
+                    strokeWeight: 5,
+                    strokeColor: '#ff7f00',
+                    strokeOpacity: 0.7,
+                    strokeStyle: 'solid'
                 });
-
-                toiletsWithDist.sort((a, b) => a.dist - b.dist);
-
-                const top = toiletsWithDist.slice(0, limit);
-                setNearestList(top);
-                setIsListVisible(true);
-
-                const nearest = top[0];
-                if (nearest && markersRef.current[nearest.id]) {
-                    const marker = markersRef.current[nearest.id];
-                    const infoWindow = infoWindowsRef.current[nearest.id];
-
-                    infoWindow.open(mapInstance, marker);
-
-                    const line = new kakao.maps.Polyline({
-                        map: mapInstance,
-                        path: [new kakao.maps.LatLng(lat, lng), new kakao.maps.LatLng(nearest.lat, nearest.lng)],
-                        strokeWeight: 6,
-                        strokeColor: '#FF0000',
-                        strokeOpacity: 0.8,
-                        strokeStyle: 'solid'
-                    });
-                    routeLineRef.current = line;
-
-                    const bounds = new kakao.maps.LatLngBounds();
-                    bounds.extend(new kakao.maps.LatLng(lat, lng));
-                    bounds.extend(new kakao.maps.LatLng(nearest.lat, nearest.lng));
-
-                    mapInstance.setBounds(bounds);
-                }
+                routeLineRef.current = line;
             };
 
-            // ... (handleFindLocation same) ...
             const handleFindLocation = (mode = 'normal') => {
-                // Reset other modes
-                setShowAll(false);
-                setSelectedCourse(null);
-                if (ollePolylineRef.current) { ollePolylineRef.current.setMap(null); ollePolylineRef.current = null; }
-
-                if (!navigator.geolocation) {
-                    alert("Geolocation is not supported.");
-                    return;
-                }
-
+                if (!navigator.geolocation) return;
                 setIsLoading(true);
-
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const { latitude, longitude } = position.coords;
-                        const userLatLng = new kakao.maps.LatLng(latitude, longitude);
-                        setUserLocation(userLatLng);
-
-                        if (mapInstance) {
-                            mapInstance.setCenter(userLatLng);
-
-                            // User Marker
-                            if (userMarkerRef.current) {
-                                userMarkerRef.current.setPosition(userLatLng);
-                            } else {
-                                const imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png";
-                                const imageSize = new kakao.maps.Size(64, 69);
-                                const imageOption = { offset: new kakao.maps.Point(27, 69) };
-                                const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption);
-                                userMarkerRef.current = new kakao.maps.Marker({
-                                    position: userLatLng,
-                                    map: mapInstance,
-                                    image: markerImage,
-                                    zIndex: 1000
-                                });
-                            }
-
-                            if (mode === 'emergency') {
-                                setIsEmergency(true);
-                                setSearchCenter(null); // Disable radius search
-                                setSearchRadius(0);
-                                if (radiusCircleRef.current) radiusCircleRef.current.setMap(null);
-                                setShowMarkers(false); // Let nearestList handle it
-                                setTimeout(() => findNearest(latitude, longitude, 5), 200); // Changed to 5
-                            } else {
-                                // Normal Mode -> Radius Mode
-                                setIsEmergency(false);
-                                setNearestList([]);
-                                setIsListVisible(false);
-                                if (routeLineRef.current) routeLineRef.current.setMap(null);
-
-                                setSearchCenter(userLatLng);
-                                setSearchRadius(1); // Default 1km
-                                updateRadiusCircle(userLatLng, 1);
-                                setShowMarkers(false); // Let radius logic handle it
-                            }
-                        }
-                        setIsLoading(false);
-                    },
-                    (error) => {
-                        console.error(error);
-                        setIsLoading(false);
-                        alert("위치 정보를 가져올 수 없습니다. GPS 설정이나 브라우저 권한을 확인해주세요.");
-                    },
-                    {
-                        enableHighAccuracy: true, // Use GPS
-                        timeout: 10000,         // Wait max 10s
-                        maximumAge: 10000       // Use cached position if < 10s old
-                    }
-                );
-            };
-
-            // ... (handleOlleSelect same) ...
-            // ...
-
-            // ... (handleOlleSelect same) ...
-            const handleOlleSelect = (courseId) => {
-                // Reset others
-                setShowAll(false);
-                setSearchCenter(null); setSearchRadius(0);
-                if (radiusCircleRef.current) { radiusCircleRef.current.setMap(null); radiusCircleRef.current = null; }
-                if (searchMarkerRef.current) { searchMarkerRef.current.setMap(null); searchMarkerRef.current = null; }
-
-                if (!window.OLLE_COURSES) return;
-
-                if (courseId === "") {
-                    setSelectedCourse(null);
-                    if (ollePolylineRef.current) { ollePolylineRef.current.setMap(null); ollePolylineRef.current = null; }
-                    setShowMarkers(false); // Hide if deselected
-                    return;
-                }
-
-                const course = window.OLLE_COURSES[courseId];
-                setSelectedCourse(courseId);
-                setShowMarkers(false); // Let the effect handle visibility for course only
-                setIsListVisible(false);
-                setIsEmergency(false);
-
-                // Clear route lines
-                if (ollePolylineRef.current) { ollePolylineRef.current.setMap(null); }
-                if (routeLineRef.current) { routeLineRef.current.setMap(null); }
-                Object.values(infoWindowsRef.current).forEach(iw => iw.close());
-
-                // Draw new route
-                if (mapInstance && course) {
-                    const path = course.path.map(p => new kakao.maps.LatLng(p.lat, p.lng));
-                    const polyline = new kakao.maps.Polyline({
-                        map: mapInstance,
-                        path: path,
-                        strokeWeight: 8,
-                        strokeColor: course.color,
-                        strokeOpacity: 0.8,
-                        strokeStyle: 'solid'
-                    });
-                    ollePolylineRef.current = polyline;
-
-                    // Fit bounds
-                    const bounds = new kakao.maps.LatLngBounds();
-                    path.forEach(p => bounds.extend(p));
-                    mapInstance.setBounds(bounds);
-                }
-            };
-
-            // ... (handleToiletClick) ...
-            const handleToiletClick = (toilet) => {
-                if (!mapInstance || !markersRef.current[toilet.id]) return;
-                const marker = markersRef.current[toilet.id];
-                const infoWindow = infoWindowsRef.current[toilet.id];
-
-                Object.values(infoWindowsRef.current).forEach(iw => iw.close());
-                infoWindow.open(mapInstance, marker);
-                mapInstance.setCenter(marker.getPosition());
-                mapInstance.setLevel(3);
-
-                // Dynamic Route Line: Draw line from User Location to this toilet
-                if (userLocation) {
-                    if (routeLineRef.current) {
-                        routeLineRef.current.setMap(null);
-                    }
-
-                    const line = new kakao.maps.Polyline({
-                        map: mapInstance,
-                        path: [userLocation, new kakao.maps.LatLng(toilet.lat, toilet.lng)],
-                        strokeWeight: 6,
-                        strokeColor: '#FF0000',
-                        strokeOpacity: 0.8,
-                        strokeStyle: 'solid'
-                    });
-                    routeLineRef.current = line;
-                }
-            };
-
-            // ... (handleSearchAddress same) ...
-            const handleSearchAddress = () => {
-                if (!searchAddress || !mapInstance) return;
-
-                // Reset other modes
                 setShowAll(false);
                 setSelectedCourse(null);
-                setIsEmergency(false);
-                setShowMarkers(false); // Controlled by radius
-                if (ollePolylineRef.current) { ollePolylineRef.current.setMap(null); ollePolylineRef.current = null; }
 
-                const geocoder = new kakao.maps.services.Geocoder();
-                geocoder.addressSearch(searchAddress, function (result, status) {
-                    if (status === kakao.maps.services.Status.OK) {
-                        const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    const latLng = new kakao.maps.LatLng(latitude, longitude);
+                    setUserLocation(latLng);
+                    mapInstance.setCenter(latLng);
 
-                        setSearchCenter(coords);
-                        setSearchRadius(1); // Default to 1km
-
-                        mapInstance.setCenter(coords);
-
-                        // Search Marker
-                        if (searchMarkerRef.current) searchMarkerRef.current.setMap(null);
-                        const imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
-                        const imageSize = new kakao.maps.Size(24, 35);
-                        const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
-                        searchMarkerRef.current = new kakao.maps.Marker({
-                            map: mapInstance,
-                            position: coords,
-                            image: markerImage,
-                            title: searchAddress
-                        });
-
-                        updateRadiusCircle(coords, 1);
+                    // User icon
+                    if (userMarkerRef.current) {
+                        userMarkerRef.current.setPosition(latLng);
                     } else {
-                        alert('주소를 찾을 수 없습니다.');
+                        userMarkerRef.current = new kakao.maps.Marker({
+                            position: latLng,
+                            map: mapInstance,
+                            image: new kakao.maps.MarkerImage('https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png', new kakao.maps.Size(32, 34))
+                        });
                     }
-                });
+
+                    if (mode === 'emergency') {
+                        setIsEmergency(true);
+                        const sorted = toilets.map(t => ({ ...t, dist: getDistance(latitude, longitude, t.lat, t.lng) }))
+                                             .sort((a, b) => a.dist - b.dist)
+                                             .slice(0, 5);
+                        setNearestList(sorted);
+                        setIsListVisible(true);
+                    } else {
+                        setSearchCenter(latLng);
+                        updateRadiusUI(latLng, 1);
+                    }
+                    setIsLoading(false);
+                }, () => setIsLoading(false), { enableHighAccuracy: true });
             };
 
-            // ... (updateRadiusCircle same) ...
-            const updateRadiusCircle = (center, km) => {
-                if (!mapInstance || !center) return;
+            const updateRadiusUI = (center, km) => {
                 setSearchRadius(km);
-
                 if (radiusCircleRef.current) radiusCircleRef.current.setMap(null);
-
                 const circle = new kakao.maps.Circle({
-                    center: center,
-                    radius: km * 1000,
-                    strokeWeight: 2,
-                    strokeColor: '#75B8FA',
-                    strokeOpacity: 0.8,
-                    strokeStyle: 'dashed',
-                    fillColor: '#CFE7FF',
-                    fillOpacity: 0.3
+                    center, radius: km * 1000,
+                    strokeWeight: 1, strokeColor: '#ff7f00', strokeOpacity: 0.8,
+                    fillColor: '#ff7f00', fillOpacity: 0.1, map: mapInstance
                 });
-                circle.setMap(mapInstance);
                 radiusCircleRef.current = circle;
-
-                // Fit bounds
                 const bounds = new kakao.maps.LatLngBounds();
-                const delta = (km * 0.012);
-                bounds.extend(new kakao.maps.LatLng(center.getLat() - delta, center.getLng() - delta));
-                bounds.extend(new kakao.maps.LatLng(center.getLat() + delta, center.getLng() + delta));
+                const d = km * 0.012;
+                bounds.extend(new kakao.maps.LatLng(center.getLat() - d, center.getLng() - d));
+                bounds.extend(new kakao.maps.LatLng(center.getLat() + d, center.getLng() + d));
+                mapInstance.setBounds(bounds);
+            };
+
+            const handleOlleSelect = (id) => {
+                if (!id) {
+                    setSelectedCourse(null);
+                    if (ollePolylineRef.current) ollePolylineRef.current.setMap(null);
+                    return;
+                }
+                const course = window.OLLE_COURSES[id];
+                setSelectedCourse(id);
+                setShowAll(false);
+                setSearchCenter(null);
+                if (ollePolylineRef?.current) ollePolylineRef.current.setMap(null);
+                
+                const path = course.path.map(p => new kakao.maps.LatLng(p.lat, p.lng));
+                const poly = new kakao.maps.Polyline({
+                    map: mapInstance, path,
+                    strokeWeight: 6, strokeColor: course.color, strokeOpacity: 0.8
+                });
+                ollePolylineRef.current = poly;
+                const bounds = new kakao.maps.LatLngBounds();
+                path.forEach(p => bounds.extend(p));
                 mapInstance.setBounds(bounds);
             };
 
             return (
-                <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                    {/* Loading Overlay */}
+                <div id="root">
                     {isLoading && (
-                        <div style={{
-                            position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-                            background: 'rgba(255,255,255,0.7)', zIndex: 99999,
-                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
-                        }}>
-                            <div className="spinner"></div> {/* Use simple CSS spinner or text */}
-                            <p style={{ marginTop: '10px', fontWeight: 'bold', color: '#ff7f00' }}>위치를 찾고 있습니다...</p>
-                            <style>{`
-                                .spinner {
-                                    border: 4px solid #f3f3f3;
-                                    border-top: 4px solid #ff7f00;
-                                    border-radius: 50%;
-                                    width: 40px;
-                                    height: 40px;
-                                    animation: spin 1s linear infinite;
-                                }
-                                @keyframes spin {
-                                    0% { transform: rotate(0deg); }
-                                    100% { transform: rotate(360deg); }
-                                }
-                            `}</style>
+                        <div style={{position:'fixed', inset:0, background:'rgba(255,255,255,0.8)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center'}}>
+                            <div className="pulse-glow" style={{width:20, height:20, background:'var(--primary)', borderRadius:'50%'}}></div>
                         </div>
                     )}
-                    <header>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <h1 style={{ fontSize: '1.2rem', margin: 0 }}>{t('title')} 🚽 <span style={{ fontSize: '0.8rem', color: '#888' }}>v2.0</span></h1>
-                                <div style={{ display: 'flex', gap: '5px' }}>
-                                    {['KR', 'EN', 'CN', 'JP'].map(lang => (
-                                        <button key={lang} onClick={() => setLanguage(lang)} style={{
-                                            border: language === lang ? '1px solid #ff7f00' : '1px solid #ddd',
-                                            background: language === lang ? '#ff7f00' : 'white',
-                                            color: language === lang ? 'white' : '#333',
-                                            borderRadius: '5px', padding: '2px 5px', fontSize: '0.7rem', cursor: 'pointer'
-                                        }}>{lang}</button>
-                                    ))}
-                                    <button onClick={() => setShowHelp(true)} style={{
-                                        background: 'white', border: '1px solid #ccc', fontSize: '1.2rem', cursor: 'pointer',
-                                        borderRadius: '50%', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)', marginLeft: '5px'
-                                    }}>❓</button>
-                                </div>
-                            </div>
 
-                            <select onChange={(e) => handleOlleSelect(e.target.value)} style={{ padding: '5px', borderRadius: '15px', border: '1px solid #ff7f00', outline: 'none', fontSize: '0.9rem' }} value={selectedCourse || ""}>
+                    <header>
+                        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                            <h1>🍊 {t('title')}</h1>
+                            <div style={{display:'flex', gap:'8px'}}>
+                                <button className="filter-badge" onClick={() => setLanguage(language==='KR'?'EN':'KR')}>{language}</button>
+                            </div>
+                        </div>
+
+                        <div style={{display:'flex', gap:'8px'}}>
+                            <div style={{flex:1, position:'relative'}}>
+                                <input 
+                                    className="filter-badge" 
+                                    style={{width:'100%', padding:'10px 15px', borderRadius:'12px', border:'1px solid var(--border)'}}
+                                    placeholder={t('searchPlaceholder')}
+                                    value={searchAddress}
+                                    onChange={e => setSearchAddress(e.target.value)}
+                                    onKeyPress={e => e.key === 'Enter' && alert('Search not implemented yet with premium Geocoder')}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="filter-container">
+                            <button className={`filter-badge ${showAll ? 'active' : ''}`} onClick={() => {setShowAll(!showAll); setSelectedCourse(null); setSearchCenter(null);}}>
+                                {t('showAll')}
+                            </button>
+                            <select className="filter-badge" onChange={e => handleOlleSelect(e.target.value)} value={selectedCourse || ""}>
                                 <option value="">{t('olleSelect')}</option>
-                                {window.OLLE_COURSES && Object.keys(window.OLLE_COURSES).sort((a, b) => {
-                                    const numA = parseFloat(a);
-                                    const numB = parseFloat(b);
-                                    if (numA !== numB) return numA - numB;
-                                    return a.localeCompare(b);
-                                }).map(id => (
-                                    <option key={id} value={id}>
-                                        {window.OLLE_COURSES[id].name}
-                                    </option>
+                                {window.OLLE_COURSES && Object.keys(window.OLLE_COURSES).map(id => (
+                                    <option key={id} value={id}>{window.OLLE_COURSES[id].name}</option>
                                 ))}
                             </select>
+                        </div>
 
-                            {/* Show All Toggle */}
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', cursor: 'pointer', padding: '0 5px' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={showAll}
-                                    onChange={(e) => {
-                                        setShowAll(e.target.checked);
-                                        if (e.target.checked) {
-                                            setSelectedCourse(null);
-                                            setSearchCenter(null);
-                                            // Reset other visuals
-                                            if (ollePolylineRef.current) ollePolylineRef.current.setMap(null);
-                                            if (radiusCircleRef.current) radiusCircleRef.current.setMap(null);
-                                            if (searchMarkerRef.current) searchMarkerRef.current.setMap(null);
-                                        }
-                                    }}
-                                    style={{ width: '18px', height: '18px' }}
-                                />
-                                {t('showAll')}
-                            </label>
-
-                            {/* Address Search Bar */}
-                            <div style={{ display: 'flex', gap: '5px', width: '100%' }}>
-                                <input
-                                    type="text"
-                                    placeholder={t('searchPlaceholder')}
-                                    {...{ value: searchAddress }}
-                                    onChange={(e) => setSearchAddress(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && handleSearchAddress()}
-                                    style={{ flex: 1, padding: '8px', borderRadius: '15px', border: '1px solid #ddd', fontSize: '0.9rem' }}
-                                />
-                                <button onClick={handleSearchAddress} style={{ padding: '8px 12px', background: '#ff7f00', color: 'white', border: 'none', borderRadius: '15px', cursor: 'pointer' }}>🔍</button>
-                            </div>
-
-                            {/* My Location Button */}
-                            <button
-                                onClick={() => handleFindLocation('normal')}
-                                style={{
-                                    width: '100%', padding: '10px', background: '#4CAF50', color: 'white',
-                                    border: 'none', borderRadius: '15px', fontWeight: 'bold', cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px'
-                                }}
-                            >
+                        <div className="filter-container">
+                            <button className={`filter-badge ${featureFilters.diaper ? 'active' : ''}`} onClick={() => setFeatureFilters({...featureFilters, diaper: !featureFilters.diaper})}>
+                                👶 {t('diaper')}
+                            </button>
+                            <button className={`filter-badge ${featureFilters.open24h ? 'active' : ''}`} onClick={() => setFeatureFilters({...featureFilters, open24h: !featureFilters.open24h})}>
+                                🌙 {t('open24h')}
+                            </button>
+                            <button className="filter-badge" style={{background:'var(--primary-soft)', color:'var(--primary)'}} onClick={() => handleFindLocation('normal')}>
                                 {t('myLocation')}
                             </button>
-
-                            {/* Radius Buttons */}
-                            {searchCenter && (
-                                <div style={{ display: 'flex', gap: '5px', justifyContent: 'center' }}>
-                                    {[1, 3, 5, 10].map(km => (
-                                        <button
-                                            key={km}
-                                            onClick={() => updateRadiusCircle(searchCenter, km)}
-                                            style={{
-                                                padding: '4px 10px',
-                                                borderRadius: '12px',
-                                                border: '1px solid #ff7f00',
-                                                background: searchRadius === km ? '#ff7f00' : 'white',
-                                                color: searchRadius === km ? 'white' : '#ff7f00',
-                                                cursor: 'pointer',
-                                                fontSize: '0.8rem'
-                                            }}
-                                        >
-                                            {km}km
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
                         </div>
                     </header>
-                    <div className="map-container">
+
+                    <main className="map-container">
                         <div id="map" ref={mapRef}></div>
 
-                        {/* Nearest List Overlay */}
+                        <button className="sos-button pulse-glow" onClick={() => handleFindLocation('emergency')}>
+                            <span className="sos-icon">🚨</span>
+                            <span className="sos-text">{t('emergency')}</span>
+                        </button>
+
                         <div className={`restroom-list-container ${isListVisible ? 'active' : ''}`}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                                <h3 style={{ margin: 0 }}>{t('nearList')}</h3>
-                                <button onClick={() => setIsListVisible(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>×</button>
+                            <div style={{display:'flex', justifyContent:'space-between', marginBottom:'15px'}}>
+                                <h3 style={{margin:0, fontWeight:800}}>{t('nearList')}</h3>
+                                <button onClick={() => setIsListVisible(false)} style={{background:'none', border:'none', fontSize:'1.5rem', cursor:'pointer'}}>×</button>
                             </div>
-                            {nearestList.map((toilet) => (
-                                <div key={toilet.id} className="restroom-item" onClick={() => handleToiletClick(toilet)}>
-                                    <div className="restroom-header">
-                                        <span className="restroom-name">{toilet.name}</span>
-                                        <span className="restroom-dist">
-                                            {toilet.dist < 1 ? `${(toilet.dist * 1000).toFixed(0)}m` : `${toilet.dist.toFixed(1)}km`}
-                                        </span>
+                            {nearestList.map(toilet => (
+                                <div key={toilet.id} className="restroom-item animate-fade-in" onClick={() => {
+                                    const pos = new kakao.maps.LatLng(toilet.lat, toilet.lng);
+                                    mapInstance.panTo(pos);
+                                    infoWindowsRef.current[toilet.id].open(mapInstance, markersRef.current[toilet.id]);
+                                    drawRouteLine(pos);
+                                }}>
+                                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
+                                        <div>
+                                            <span className="restroom-name">{toilet.name}</span>
+                                            <span className="restroom-dist">
+                                                {toilet.dist < 1 ? `${(toilet.dist * 1000).toFixed(0)}m` : `${toilet.dist.toFixed(1)}km`}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <p className="restroom-address">{toilet.address || t('addressInfo')}</p>
-                                    <div className="restroom-meta">
-                                        {toilet.type === 'Public' ? <span className="tag">Public</span> : <span className="tag">Tourist</span>}
-                                        {toilet.diaperTable && <span className="tag">{t('diaper')}</span>}
+                                    <p className="restroom-address">{toilet.address}</p>
+                                    <div style={{display:'flex', gap:'5px'}}>
+                                        {toilet.diaperTable && <span className="tag premium">👶 기저귀</span>}
+                                        {toilet.openTime === '상시' && <span className="tag premium">🌙 24H</span>}
                                     </div>
                                 </div>
                             ))}
                         </div>
-
-
-                        <button onClick={() => handleFindLocation('emergency')}
-                            onTouchEnd={(e) => {
-                                e.preventDefault();
-                                handleFindLocation('emergency');
-                            }}
-                            style={{
-                                position: 'absolute', bottom: '150px', right: '20px', width: '80px', height: '80px',
-                                borderRadius: '50%', border: 'none', background: '#dc3545', color: 'white',
-                                fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
-                                zIndex: 9999, cursor: 'pointer', display: 'flex', flexDirection: 'column',
-                                alignItems: 'center', justifyContent: 'center', animation: 'pulse 2s infinite',
-                                userSelect: 'none', WebkitUserSelect: 'none'
-                            }}
-                        >
-                            <span style={{ fontSize: '1.5rem', marginBottom: '2px' }}>🚨</span>
-                            <span style={{ fontSize: '0.8rem' }}>{t('emergency')}</span>
-                        </button>
-                    </div >
-
-                    {/* Help Modal */}
-                    {
-                        showHelp && (
-                            <div style={{
-                                position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-                                background: 'rgba(0,0,0,0.6)', zIndex: 10000, display: 'flex',
-                                justifyContent: 'center', alignItems: 'center', padding: '10px'
-                            }} onClick={() => setShowHelp(false)}>
-                                <div style={{
-                                    background: 'white', padding: '15px', borderRadius: '15px',
-                                    maxWidth: '340px', width: '90%', boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
-                                    overflowY: 'auto', maxHeight: '85vh', boxSizing: 'border-box'
-                                }} onClick={(e) => e.stopPropagation()}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                                        <h2 style={{ margin: 0, color: '#ff7f00' }}>{t('helpTitle')}</h2>
-                                        <button onClick={() => setShowHelp(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
-                                    </div>
-
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontSize: '0.95rem', lineHeight: '1.5' }}>
-                                        <div>
-                                            <strong>{t('helpSOS')}</strong>
-                                            <p style={{ margin: '5px 0 0', color: '#555' }}>{t('helpSOSDesc')}</p>
-                                        </div>
-                                        <div>
-                                            <strong>{t('helpNear')}</strong>
-                                            <p style={{ margin: '5px 0 0', color: '#555' }}>{t('helpNearDesc')}</p>
-                                        </div>
-                                        <div>
-                                            <strong>{t('helpOlle')}</strong>
-                                            <p style={{ margin: '5px 0 0', color: '#555' }}>{t('helpOlleDesc')}</p>
-                                        </div>
-                                        <div>
-                                            <strong>{t('helpMap')}</strong>
-                                            <p style={{ margin: '5px 0 0', color: '#555' }}>{t('helpMapDesc')}</p>
-                                        </div>
-                                        <div style={{ background: '#fff3cd', padding: '10px', borderRadius: '8px' }}>
-                                            <strong>{t('helpApp')}</strong>
-                                            <p style={{ margin: '5px 0 0', fontSize: '0.9rem' }}>{t('helpAppDesc')}</p>
-                                        </div>
-                                    </div>
-
-                                    <button onClick={() => setShowHelp(false)} style={{
-                                        width: '100%', padding: '12px', marginTop: '20px',
-                                        background: '#ff7f00', color: 'white', border: 'none',
-                                        borderRadius: '10px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer'
-                                    }}>
-                                        {t('confirm')}
-                                    </button>
-                                </div>
-                            </div>
-                        )
-                    }
-                </div >
+                    </main>
+                </div>
             );
         }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
-    </script>
-    <script>
-        // Global Review Handler
-        window.handleReview = (id, action) => {
-            const storage = JSON.parse(localStorage.getItem('jeju_reviews') || '{}');
-            const current = storage[id] || { good: 0, bad: 0, userAction: null };
-
-            // Logic: Toggle if same, Switch if different
-            if (current.userAction === action) {
-                // Cancel
-                current[action]--;
-                current.userAction = null;
-            } else {
-                // Switch
-                if (current.userAction) current[current.userAction]--; // Decrease old
-                current[action]++; // Increase new
-                current.userAction = action;
-            }
-
-            storage[id] = current;
-            localStorage.setItem('jeju_reviews', JSON.stringify(storage));
-
-            alert(`리뷰가 반영되었습니다: ${action === 'good' ? '좋아요' : '별로예요'}`);
-        };
-
-        // Naver Map Deep Link Handler
-        window.openNaverMap = (lat, lng, name) => {
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            const urlName = encodeURIComponent(name);
-            const appUrl = `nmap://route/public?dlat=${lat}&dlng=${lng}&dname=${urlName}&appname=JejuRestroom`;
-            const webUrl = `https://m.map.naver.com/route.nhn?menu=route&elng=${lng}&elat=${lat}&etext=${urlName}`;
-
-            if (isMobile) {
-                // Try App
-                const start = new Date().getTime();
-                window.location.href = appUrl;
-
-                // Fallback to Web if App doesn't open
-                setTimeout(() => {
-                    if (new Date().getTime() - start < 2000) {
-                        window.open(webUrl, '_blank');
-                    }
-                }, 1500);
-            } else {
-                // Desktop -> Web
-                window.open(webUrl, '_blank');
-            }
-        };
-    </script>
-    <script>
-        // Service Worker Registration for PWA
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                    })
-                    .catch(err => {
-                        console.log('ServiceWorker registration failed: ', err);
-                    });
-            });
-        }
     </script>
 </body>
 
